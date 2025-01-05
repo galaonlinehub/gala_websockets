@@ -56,8 +56,8 @@ const createWorker = async () => {
     worker = await mediasoup.createWorker({
       logLevel: 'debug',
       logTags: ['info', 'ice', 'dtls', 'rtp', 'srtp', 'rtcp'],
-      rtcMinPort: 2000,
-      rtcMaxPort: 2020,
+      rtcMinPort: 40000,
+      rtcMaxPort: 49999,
     });
 
     console.log(`MediaSoup Worker pid: ${worker.pid}`);
@@ -213,7 +213,7 @@ connections.on('connection', async socket => {
     try {
       socket.join(roomName);
       const router = await createRoom(roomName, socket.id);
-
+  
       peers[socket.id] = {
         socket,
         roomName,
@@ -225,15 +225,27 @@ connections.on('connection', async socket => {
           isAdmin: false,
         }
       };
-
+  
+      // Get existing producers in this room
+      const existingProducers = producers
+        .filter(producer => producer.roomName === roomName && producer.socketId !== socket.id)
+        .map(producer => ({
+          producerId: producer.producer.id,
+          socketId: producer.socketId
+        }));
+  
       // Get Router RTP Capabilities
       const rtpCapabilities = router.rtpCapabilities;
-
-      callback({ rtpCapabilities });
-
-      console.log('Peer joined room:', roomName);
-
-      // Notify other peers in the room
+  
+      // Send both capabilities and existing producers
+      callback({ 
+        rtpCapabilities,
+        existingProducers  // Add this
+      });
+  
+      console.log(`Peer ${socket.id} joined room: ${roomName}`);
+  
+      // Notify other peers
       socket.broadcast.to(roomName).emit('peer-joined', {
         socketId: socket.id,
         producerIds: producers
