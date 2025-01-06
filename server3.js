@@ -1,18 +1,22 @@
+import dotenv from 'dotenv'
 import express from 'express';
 import https from 'httpolyglot';
 import fs from 'fs';
 import path from 'path';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import jwt from 'jsonwebtoken'
 import mediasoup from 'mediasoup';
+import axios from 'axios'
 
+dotenv.config();
 const __dirname = path.resolve();
 const app = express();
 
 // Enable CORS
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'https://localhost:3000',
-  credentials: true
+  credentials: true,
 }));
 
 // Basic route handling
@@ -27,7 +31,7 @@ app.use('/sfu/:room', express.static(path.join(__dirname, 'public')));
 // SSL configuration
 const sslOptions = {
   key: fs.readFileSync('./server/ssl/key.pem', 'utf-8'),
-  cert: fs.readFileSync('./server/ssl/cert.pem', 'utf-8')
+  cert: fs.readFileSync('./server/ssl/cert.pem', 'utf-8'),
 };
 
 const httpsServer = https.createServer(sslOptions, app);
@@ -39,8 +43,39 @@ const io = new Server(httpsServer, {
   },
 });
 
-// MediaSoup namespace
-const connections = io.of('/mediasoup');
+const publicKey = process.env.PASSPORT_PUBLIC_KEY;
+
+const authenticateSocket = (socket, next) => {
+  const token = socket.handshake.query.token;
+
+  if (!token) {
+    return next(new Error('Authentication error: No token provided'));
+  }
+
+  jwt.verify(token, publicKey, async (err, user) => {
+    if (err) {
+      console.log(err)
+      return next(new Error('Authentication error: Invalid token'));
+    }
+
+    try {
+      const res = await axios.get('http://localhost:8000/api/user', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      socket.user = res.data;
+      next();
+    } catch (apiError) {
+      console.log(apiError)
+      return next(new Error('Authentication error: Failed to fetch user details'));
+    }
+  });
+};
+
+
+// Namespace for signaling
+const signalingNamespace = io.of('/signaling').use(authenticateSocket);
 
 // Global variables
 let worker;
@@ -62,7 +97,7 @@ const createWorker = async () => {
 
     console.log(`MediaSoup Worker pid: ${worker.pid}`);
 
-    worker.on('died', error => {
+    worker.on('died', (error) => {
       console.error('MediaSoup Worker died:', error);
       setTimeout(() => process.exit(1), 2000);
     });
@@ -114,8 +149,8 @@ const createWebRtcTransport = async (router) => {
         listenIps: [
           {
             ip: process.env.MEDIASOUP_LISTEN_IP || '0.0.0.0',
-            announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || '192.168.0.12',
-          }
+            announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || '192.168.100.127',
+          },
         ],
         enableUdp: true,
         enableTcp: true,
@@ -126,7 +161,7 @@ const createWebRtcTransport = async (router) => {
         maxIncomingBitrate: 1500000,
       });
 
-      transport.on('dtlsstatechange', dtlsState => {
+      transport.on('dtlsstatechange', (dtlsState) => {
         if (dtlsState === 'closed') {
           transport.close();
         }
@@ -143,13 +178,13 @@ const createWebRtcTransport = async (router) => {
   });
 };
 
-// Socket connection handling
-connections.on('connection', async socket => {
-  console.log('New connection:', socket.id);
+// Socket connection handling within signaling namespace
+signalingNamespace.on('connection', async socket => {
+  console.log('User connected:', socket.id, socket.user);
   
   socket.emit('connection-success', {
     socketId: socket.id,
-    existingProducers: producers,
+    existingProducers: producers
   });
 
   const removeItems = (items, socketId, type) => {
@@ -209,21 +244,62 @@ connections.on('connection', async socket => {
     return router;
   };
 
+  const checkUserConstraints = (roomName, user) => {
+    
+    const existingPeer = Object.values(peers).find(peer => 
+      peer.user.id === user.id
+    );
+    
+    if (existingPeer) {
+      throw new Error('User already has an active connection in a room');
+    }
+
+    
+    if (user.role === 'instructor') {
+      const existingInstructor = Object.values(peers).find(peer => 
+        peer.roomName === roomName && 
+        peer.user.role === 'instructor'
+      );
+      
+      if (existingInstructor) {
+        throw new Error('Room already has an instructor');
+      }
+    }
+
+    return true;
+  };
+
+
   socket.on('joinRoom', async ({ roomName }, callback) => {
     try {
+
+      const token = socket.handshake.query.token;
+      const res = await axios.get(`http://localhost:8000/api/verify_meeting/${roomName}`,{
+        headers:{
+          Authorization: `Bearer ${token}`,
+        }
+      });
+      if (res.status === 404){
+        throw new Error('Invalid meeting link encountered')
+        
+      }
+      if(res.data){
+        if(res.status === 200 && res.data === "Ok"){
+
+        checkUserConstraints(roomName, socket.user);
+
+       
       socket.join(roomName);
       const router = await createRoom(roomName, socket.id);
-  
+      
+
       peers[socket.id] = {
         socket,
         roomName,
         transports: [],
         producers: [],
         consumers: [],
-        peerDetails: {
-          name: '',
-          isAdmin: false,
-        }
+        user: socket.user 
       };
   
       // Get existing producers in this room
@@ -237,10 +313,10 @@ connections.on('connection', async socket => {
       // Get Router RTP Capabilities
       const rtpCapabilities = router.rtpCapabilities;
   
-      // Send both capabilities and existing producers
+      // Sending both capabilities and existing producers
       callback({ 
         rtpCapabilities,
-        existingProducers  // Add this
+        existingProducers  
       });
   
       console.log(`Peer ${socket.id} joined room: ${roomName}`);
@@ -251,9 +327,11 @@ connections.on('connection', async socket => {
         producerIds: producers
           .filter(producer => producer.roomName === roomName)
           .map(producer => producer.producer.id)
-      });
+      }); }
+    }
+    
     } catch (error) {
-      console.error('Error joining room:', error);
+      console.error('Error joining room:', error.message);
       callback({ error: error.message });
     }
   });
@@ -328,12 +406,21 @@ connections.on('connection', async socket => {
         roomName,
       });
 
-      peers[socket.id].producers.push(producer.id);
+      peers[socket.id].producers.push(producer);
+
+      const peerDetails = peers[socket.id].peerDetails;
 
       // Notify other peers in the room
       socket.broadcast.to(roomName).emit('new-producer', {
         producerId: producer.id,
         socketId: socket.id,
+        peerDetails: {
+          name: socket.user.first_name + " " + socket.user.first_name,
+          isInstructor: socket.user.role === "instructor",
+          role: socket.user.role,
+          
+        }
+        
       });
 
       producer.on('transportclose', () => {
@@ -365,6 +452,23 @@ connections.on('connection', async socket => {
     try {
       const { roomName } = peers[socket.id];
       const router = rooms[roomName].router;
+
+    
+    // Find the producer's socket information using the remoteProducerId
+    const producerData = consumers.find(c => c.consumer.id === remoteProducerId) || 
+                        [...Object.entries(peers)].find(([socketId, peer]) => 
+                          peer.producers.some(p => p.id === remoteProducerId)
+                        );
+
+    if (!producerData) {
+      console.error('Producer data not found');
+      throw new Error('Producer data not found');
+    }
+
+    const producerSocketId = producerData[0]; 
+    const producerUserInfo = peers[producerSocketId].user;
+
+
       const transport = transports.find(t => 
         t.consumer && t.transport.id === serverConsumerTransportId
       );
@@ -386,8 +490,7 @@ connections.on('connection', async socket => {
         paused: true,
       });
 
-      console.log('New consumer: created', consumer);
-
+      
 
       consumers.push({
         socketId: socket.id,
@@ -415,6 +518,10 @@ connections.on('connection', async socket => {
           kind: consumer.kind,
           rtpParameters: consumer.rtpParameters,
           serverConsumerId: consumer.id,
+          user: {
+            role: producerUserInfo.role,
+            name: producerUserInfo.first_name + " " + producerUserInfo.last_name
+          }
         }
       });
     } catch (error) {
@@ -452,6 +559,7 @@ connections.on('connection', async socket => {
   });
 });
 
+
 // Start the server
 const PORT = process.env.PORT || 3001;
 httpsServer.listen(PORT, () => {
@@ -459,10 +567,10 @@ httpsServer.listen(PORT, () => {
 });
 
 // Error handling
-process.on('uncaughtException', error => {
+process.on('uncaughtException', (error) => {
   console.error('Uncaught exception:', error);
 });
 
-process.on('unhandledRejection', error => {
+process.on('unhandledRejection', (error) => {
   console.error('Unhandled rejection:', error);
 });

@@ -1,11 +1,15 @@
+import dotenv from 'dotenv'
 import express from 'express';
 import https from 'httpolyglot';
 import fs from 'fs';
 import path from 'path';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import jwt from 'jsonwebtoken'
 import mediasoup from 'mediasoup';
+import axios from 'axios'
 
+dotenv.config();
 const __dirname = path.resolve();
 const app = express();
 
@@ -39,6 +43,8 @@ const io = new Server(httpsServer, {
   },
 });
 
+const publicKey = process.env.PASSPORT_PUBLIC_KEY;
+
 const authenticateSocket = (socket, next) => {
   const token = socket.handshake.query.token;
 
@@ -48,6 +54,7 @@ const authenticateSocket = (socket, next) => {
 
   jwt.verify(token, publicKey, async (err, user) => {
     if (err) {
+      console.log(err)
       return next(new Error('Authentication error: Invalid token'));
     }
 
@@ -60,6 +67,7 @@ const authenticateSocket = (socket, next) => {
       socket.user = res.data;
       next();
     } catch (apiError) {
+      console.log(apiError)
       return next(new Error('Authentication error: Failed to fetch user details'));
     }
   });
@@ -141,7 +149,7 @@ const createWebRtcTransport = async (router) => {
         listenIps: [
           {
             ip: process.env.MEDIASOUP_LISTEN_IP || '0.0.0.0',
-            announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || '192.168.100.105',
+            announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || '192.168.100.127',
           },
         ],
         enableUdp: true,
@@ -172,11 +180,11 @@ const createWebRtcTransport = async (router) => {
 
 // Socket connection handling within signaling namespace
 signalingNamespace.on('connection', async socket => {
-  console.log('New connection:', socket.id);
+  console.log('User connected:', socket.id, socket.user);
   
   socket.emit('connection-success', {
     socketId: socket.id,
-    existingProducers: producers,
+    existingProducers: producers
   });
 
   const removeItems = (items, socketId, type) => {
@@ -239,25 +247,31 @@ signalingNamespace.on('connection', async socket => {
   socket.on('joinRoom', async ({ roomName }, callback) => {
     try {
 
-      const res = await axios.get(`http://localhost:8000/verify_meeting/${roomName}`);
-
+      const token = socket.handshake.query.token;
+      const res = await axios.get(`http://localhost:8000/api/verify_meeting/${roomName}`,{
+        headers:{
+          Authorization: `Bearer ${token}`,
+        }
+      });
+      if (res.status === 404){
+        throw new Error('Invalid meeting link encountered')
+        
+      }
       if(res.data){
-        if(res.status === 200){
+        if(res.status === 200 && res.data === "Ok"){
 
        
       socket.join(roomName);
       const router = await createRoom(roomName, socket.id);
-  
+      
+
       peers[socket.id] = {
         socket,
         roomName,
         transports: [],
         producers: [],
         consumers: [],
-        peerDetails: {
-          name: '',
-          isAdmin: false,
-        }
+        user: socket.user 
       };
   
       // Get existing producers in this room
@@ -271,10 +285,10 @@ signalingNamespace.on('connection', async socket => {
       // Get Router RTP Capabilities
       const rtpCapabilities = router.rtpCapabilities;
   
-      // Send both capabilities and existing producers
+      // Sending both capabilities and existing producers
       callback({ 
         rtpCapabilities,
-        existingProducers  // Add this
+        existingProducers  
       });
   
       console.log(`Peer ${socket.id} joined room: ${roomName}`);
@@ -289,7 +303,7 @@ signalingNamespace.on('connection', async socket => {
     }
     
     } catch (error) {
-      console.error('Error joining room:', error);
+      console.error('Error joining room:', error.message);
       callback({ error: error.message });
     }
   });
@@ -364,12 +378,21 @@ signalingNamespace.on('connection', async socket => {
         roomName,
       });
 
-      peers[socket.id].producers.push(producer.id);
+      peers[socket.id].producers.push(producer);
+
+      const peerDetails = peers[socket.id].peerDetails;
 
       // Notify other peers in the room
       socket.broadcast.to(roomName).emit('new-producer', {
         producerId: producer.id,
         socketId: socket.id,
+        peerDetails: {
+          name: socket.user.first_name + " " + socket.user.first_name,
+          isInstructor: socket.user.role === "instructor",
+          role: socket.user.role,
+          
+        }
+        
       });
 
       producer.on('transportclose', () => {
@@ -401,6 +424,23 @@ signalingNamespace.on('connection', async socket => {
     try {
       const { roomName } = peers[socket.id];
       const router = rooms[roomName].router;
+
+    
+    // Find the producer's socket information using the remoteProducerId
+    const producerData = consumers.find(c => c.consumer.id === remoteProducerId) || 
+                        [...Object.entries(peers)].find(([socketId, peer]) => 
+                          peer.producers.some(p => p.id === remoteProducerId)
+                        );
+
+    if (!producerData) {
+      console.error('Producer data not found');
+      throw new Error('Producer data not found');
+    }
+
+    const producerSocketId = producerData[0]; 
+    const producerUserInfo = peers[producerSocketId].user;
+
+
       const transport = transports.find(t => 
         t.consumer && t.transport.id === serverConsumerTransportId
       );
@@ -422,8 +462,7 @@ signalingNamespace.on('connection', async socket => {
         paused: true,
       });
 
-      console.log('New consumer: created', consumer);
-
+      
 
       consumers.push({
         socketId: socket.id,
@@ -451,6 +490,10 @@ signalingNamespace.on('connection', async socket => {
           kind: consumer.kind,
           rtpParameters: consumer.rtpParameters,
           serverConsumerId: consumer.id,
+          user: {
+            role: producerUserInfo.role,
+            name: producerUserInfo.first_name + " " + producerUserInfo.last_name
+          }
         }
       });
     } catch (error) {
