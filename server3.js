@@ -8,6 +8,12 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken'
 import mediasoup from 'mediasoup';
 import axios from 'axios'
+import { getIPv4Address } from './config.js';
+import { createClient } from '@redis/client';
+
+
+
+
 
 dotenv.config();
 const __dirname = path.resolve();
@@ -73,6 +79,95 @@ const authenticateSocket = (socket, next) => {
   });
 };
 
+const redisClient = createClient({
+  url: 'redis://localhost:6379'
+});
+await redisClient.connect();
+redisClient.on('error', (err) => console.error('Redis error:', err));
+
+// Define the namespace for users
+const messagingNamespace = io.of('/chat');
+
+// Store online users
+const onlineUsers = new Map();
+
+messagingNamespace.on('connection', (socket) => {
+    console.log(`User connected: ${socket.id}`);
+
+    
+    
+
+
+    
+
+    // Handle user joining
+    socket.on('join', async ({userId}) => {
+      
+      console.log("user joined",userId)
+        onlineUsers.set(userId, socket.id);
+        redisClient.set(`user:${userId}:status`, 'online');
+        socket.userId = userId;
+
+        const queuedMessages = await redisClient.lRange(`queued:${userId}`, 0, -1);
+        console.log("the queued messages are",queuedMessages)
+        if (queuedMessages.length > 0) {
+          console.log(`Delivering queued messages to user ${userId}`);
+            queuedMessages.forEach(msg => {
+                const message = JSON.parse(msg);
+                socket.emit('queued-message', message);
+            });
+            // Clear the queue after delivery
+            await redisClient.del(`queued:${userId}`);
+        }
+   
+
+        // Notify others
+        socket.broadcast.emit('user-status', { userId, status: 'online' });
+    });
+
+    // Handle incoming messages
+    socket.on('message', async ({ senderId, receiverId, message }) => {
+        
+        const receiverSocketId = onlineUsers.get(receiverId);
+        
+        if (receiverSocketId) {
+            // Send message directly if the user is online
+            messagingNamespace.to(receiverSocketId).emit('message', { senderId, message });
+        } else {
+            // User is offline, save to Redis queue
+            const messageQueueKey = `queued:${receiverId}`;
+            console.log(messageQueueKey)
+            redisClient.rPush(messageQueueKey, JSON.stringify({ senderId, message }));
+            console.log(`Message queued for user ${receiverId}`);
+        }
+
+        // Save message to Laravel backend
+        try {
+          const res =   await axios.post('http://localhost:8000/api/save-message', {
+                sender_id: senderId,
+                receiver_id: receiverId,
+                message,
+            });
+
+            console.log('Message saved:', res.data);
+        } catch (error) {
+            console.error('Failed to save message:', error.message);
+        }
+    });
+
+    // Handle disconnection
+    socket.on('disconnect', () => {
+        const userId = [...onlineUsers.entries()].find(([, id]) => id === socket.id)?.[0];
+        if (userId) {
+            onlineUsers.delete(userId);
+            redisClient.set(`user:${userId}:status`, 'offline');
+            console.log(`User ${userId} went offline`);
+
+            // Notify others
+            socket.broadcast.emit('user-status', { userId, status: 'offline' });
+        }
+    });
+});
 
 // Namespace for signaling
 const signalingNamespace = io.of('/signaling').use(authenticateSocket);
@@ -149,7 +244,7 @@ const createWebRtcTransport = async (router) => {
         listenIps: [
           {
             ip: process.env.MEDIASOUP_LISTEN_IP || '0.0.0.0',
-            announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || '192.168.100.127',
+            announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || getIPv4Address(),
           },
         ],
         enableUdp: true,
@@ -331,8 +426,8 @@ signalingNamespace.on('connection', async socket => {
     }
     
     } catch (error) {
-      console.error('Error joining room:', error.message);
-      callback({ error: error.message });
+      console.error('Error joining room:', error.response.data);
+      callback({ error: error.response.data });
     }
   });
 

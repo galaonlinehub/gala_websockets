@@ -1,5 +1,7 @@
 // config.js
 
+import os from 'os';
+
 export const mediaCodecs = [
     {
       kind: 'audio',
@@ -50,3 +52,25 @@ export const mediaCodecs = [
     rtcMinPort: 40000,
     rtcMaxPort: 49999,
   };
+
+
+export const getIPv4Address = ()=> {
+    const networkInterfaces = os.networkInterfaces();
+    
+    
+    for (const interfaceName in networkInterfaces) {
+        const interfaces = networkInterfaces[interfaceName];
+        
+       
+        const ipv4Interface = interfaces.find(the_interface => 
+            the_interface.family === 'IPv4' && 
+            !the_interface.internal
+        );
+        
+        if (ipv4Interface) {
+            return ipv4Interface.address;
+        }
+    }
+    
+    return null; 
+}
