@@ -13,8 +13,6 @@ import { createClient } from '@redis/client';
 
 
 
-
-
 dotenv.config();
 const __dirname = path.resolve();
 const app = express();
@@ -48,7 +46,7 @@ const io = new Server(httpsServer, {
     credentials: true,
   },
 });
-
+                                                                                                         
 const publicKey = process.env.PASSPORT_PUBLIC_KEY;
 
 const authenticateSocket = (socket, next) => {
@@ -65,7 +63,7 @@ const authenticateSocket = (socket, next) => {
     }
 
     try {
-      const res = await axios.get('http://localhost:8000/api/user', {
+      const res = await axios.get('https://galaweb.galahub.org/api/user', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -93,10 +91,6 @@ const onlineUsers = new Map();
 
 messagingNamespace.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
-
-    
-    
-
 
     
 
