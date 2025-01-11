@@ -143,7 +143,7 @@ messagingNamespace.on('connection', (socket) => {
 
         // Save message to Laravel backend
         try {
-          const res =   await axios.post('http://localhost:8000/api/save-message', {
+          const res =   await axios.post('https://galaweb.galahub.org/api/save-message', {
                 sender_id: senderId,
                 receiver_id: receiverId,
                 message,
