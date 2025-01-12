@@ -363,7 +363,7 @@ signalingNamespace.on('connection', async socket => {
     try {
 
       const token = socket.handshake.query.token;
-      const res = await axios.get(`http://localhost:8000/api/verify_meeting/${roomName}`,{
+      const res = await axios.get(`https://galaweb.galahub.org/api/verify_meeting/${roomName}`,{
         headers:{
           Authorization: `Bearer ${token}`,
         }
@@ -420,7 +420,7 @@ signalingNamespace.on('connection', async socket => {
     }
     
     } catch (error) {
-      console.error('Error joining room:', error.response.data);
+      console.error('Error joining room:', error.response.data || error);
       callback({ error: error.response.data });
     }
   });
