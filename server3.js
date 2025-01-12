@@ -647,6 +647,12 @@ signalingNamespace.on('connection', async socket => {
       callback({ error: error.message });
     }
   });
+
+  socket.on("message",({roomId,message,userName,senderId})=>{
+    socket.broadcast.to(roomId).emit("message",{message,userName,senderId})
+  })
+
+
 });
 
 
