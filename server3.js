@@ -421,7 +421,9 @@ signalingNamespace.on('connection', async socket => {
     }
     
     } catch (error) {
-      console.error('Error joining room:', error.response.data || error);
+      console.log("The error is",error)
+      console.error('Error joining room:', error?.response?.data || error);
+    
       callback({ error: error.response.data });
     }
   });
@@ -648,8 +650,14 @@ signalingNamespace.on('connection', async socket => {
     }
   });
 
-  socket.on("message",({roomId,message,userName,senderId})=>{
-    socket.broadcast.to(roomId).emit("message",{message,userName,senderId})
+  socket.on("message",async({roomId,message,userName,senderId})=>{
+   try{
+     console.log("message received "+roomId,message)
+     socket.broadcast.to(roomId).emit("message",{message,userName,senderId})
+
+   }catch(error){
+     console.log(error)}
+   
   })
 
 
