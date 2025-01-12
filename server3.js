@@ -273,7 +273,8 @@ signalingNamespace.on('connection', async socket => {
   
   socket.emit('connection-success', {
     socketId: socket.id,
-    existingProducers: producers
+    role:socket.user.role,
+    name:socket.user.first_name + " " + socket.user.last_name
   });
 
   const removeItems = (items, socketId, type) => {
