@@ -421,10 +421,10 @@ signalingNamespace.on('connection', async socket => {
     }
     
     } catch (error) {
-      console.log("The error is",error)
+      console.log("The error is",error);
       console.error('Error joining room:', error?.response?.data || error);
     
-      callback({ error: error.response.data });
+      callback({ error: error?.response?.data });
     }
   });
 
