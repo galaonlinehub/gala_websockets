@@ -611,6 +611,7 @@ signalingNamespace.on('connection', async socket => {
           rtpParameters: consumer.rtpParameters,
           serverConsumerId: consumer.id,
           user: {
+            id: producerUserInfo.id,
             role: producerUserInfo.role,
             name: producerUserInfo.first_name + " " + producerUserInfo.last_name
           }
