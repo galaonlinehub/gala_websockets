@@ -662,6 +662,12 @@ signalingNamespace.on('connection', async socket => {
   })
 
 
+  socket.on('tldraw-event', (data) => {
+    
+    socket.to(data.roomId).emit('tldraw-event', data);
+  });
+
+
 });
 
 
