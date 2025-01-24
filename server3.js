@@ -663,7 +663,7 @@ signalingNamespace.on('connection', async socket => {
 
 
   socket.on('tldraw-event', (data) => {
-    
+    console.log("event triggered",{...data})
     socket.to(data.roomId).emit('tldraw-event', data);
   });
 
