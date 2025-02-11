@@ -85,9 +85,50 @@ redisClient.on('error', (err) => console.error('Redis error:', err));
 
 // Define the namespace for users
 const messagingNamespace = io.of('/chat');
+const paymentNamespace = io.of("/payment");
 
 // Store online users
 const onlineUsers = new Map();
+
+
+// // ------------------------- Redis Event Subscription -------------------------
+redisClient.on('ready', () => {
+  console.log('Connected to Redis');
+});
+
+redisClient.subscribe('galaeducation_database_payments', () => {
+  console.log('Subscribed to Payments channel');
+});
+
+redisClient.on('message', (channel, message) => {
+  console.log(`Message from ${channel}: ${message}`);
+
+  try {
+    // Parse the Redis message
+    const parsedMessage = JSON.parse(message);
+
+    
+    if (channel === 'galaeducation_database_payments' && parsedMessage.event === 'payments.event') {
+      const { email, message } = parsedMessage.data;
+      paymentNamespace.to(email).emit('paymentResponse', message);
+      console.log(`Emitted payment to user email ${email}:`, message);
+    }
+  } catch (error) {
+    console.error('Error processing Redis message:', error.message);
+  }
+});
+
+paymentNamespace.on('connection',(socket)=>{
+  
+  socket.on('join',async({email})=>{
+    `User with ${email} joined the room`
+    socket.join(email);
+
+  });
+
+  
+
+});
 
 messagingNamespace.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
