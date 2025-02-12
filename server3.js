@@ -76,59 +76,56 @@ const authenticateSocket = (socket, next) => {
     }
   });
 };
-
-const redisClient = createClient({
-  url: 'redis://default:Gala@2024@localhost:6379'
-});
-await redisClient.connect();
-redisClient.on('error', (err) => console.error('Redis error:', err));
-
-// Define the namespace for users
 const messagingNamespace = io.of('/chat');
-const paymentNamespace = io.of("/payment");
-
-// Store online users
 const onlineUsers = new Map();
 
-
-// // ------------------------- Redis Event Subscription -------------------------
-redisClient.on('ready', () => {
-  console.log('Connected to Redis');
+const redisClient = createClient({
+  url: 'redis://default:Gala@2024@5.75.156.12:6379'
 });
 
-redisClient.subscribe('galaeducation_database_payments', () => {
-  console.log('Subscribed to Payments channel');
-});
+const paymentNamespace = io.of("/payment");
 
-redisClient.on('message', (channel, message) => {
-  console.log(`Message from ${channel}: ${message}`);
 
+async function setupRedis() {
   try {
-    // Parse the Redis message
-    const parsedMessage = JSON.parse(message);
-
+    await redisClient.connect();
+    console.log('Connected to Redis');
     
-    if (channel === 'galaeducation_database_payments' && parsedMessage.event === 'payments.event') {
-      const { email, message } = parsedMessage.data;
-      paymentNamespace.to(email).emit('paymentResponse', message);
-      console.log(`Emitted payment to user email ${email}:`, message);
-    }
+    
+    const subscriber = redisClient.duplicate();
+    await subscriber.connect();
+    
+    await subscriber.subscribe('galaeducation_database_payments', (message) => {
+      try {
+        const parsedMessage = JSON.parse(message);
+        
+        if (parsedMessage.event === 'payments.event') {
+          const { clientEmail:email, message: paymentMessage } = parsedMessage.data;
+          paymentNamespace.to(email).emit('paymentResponse', paymentMessage);
+          console.log(`Payment sent to ${email}:`, paymentMessage);
+        }
+      } catch (error) {
+        console.error('Error processing message:', error);
+      }
+    });
+    
+    console.log('Subscribed to Payments channel');
   } catch (error) {
-    console.error('Error processing Redis message:', error.message);
+    console.error('Redis setup error:', error);
   }
-});
+}
 
-paymentNamespace.on('connection',(socket)=>{
-  
-  socket.on('join',async({email})=>{
-    `User with ${email} joined the room`
+
+paymentNamespace.on('connection', (socket) => {
+  socket.on('join', ({ email }) => {
+    console.log(`User ${email} joined payment room`);
     socket.join(email);
-
   });
-
-  
-
 });
+
+
+setupRedis();
+
 
 messagingNamespace.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
