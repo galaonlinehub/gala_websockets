@@ -19,7 +19,7 @@ const app = express();
 
 // Enable CORS
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'https://localhost:3000',
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   credentials: true,
 }));
 
@@ -41,7 +41,7 @@ const sslOptions = {
 const httpsServer = https.createServer(sslOptions, app);
 const io = new Server(httpsServer, {
   cors: {
-    origin: process.env.CORS_ORIGIN || 'https://localhost:3000',
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
     methods: ['GET', 'POST'],
     credentials: true,
   },
