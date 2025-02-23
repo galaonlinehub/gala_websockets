@@ -1,5 +1,3 @@
-// config.js
-
 import os from 'os';
 
 export const mediaCodecs = [

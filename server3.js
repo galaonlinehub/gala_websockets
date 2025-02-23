@@ -8,7 +8,7 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken'
 import mediasoup from 'mediasoup';
 import axios from 'axios'
-import { getIPv4Address } from './config.js';
+import { getIPv4Address } from './src/config.js';
 import { createClient } from '@redis/client';
 
 
@@ -131,7 +131,6 @@ messagingNamespace.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
 
     
-
     // Handle user joining
     socket.on('join', async ({userId}) => {
       
