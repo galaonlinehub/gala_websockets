@@ -2,9 +2,10 @@
   "name": "websockets",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon ./src/server.js"
+    "dev": "nodemon s.js"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +16,7 @@
     "@socket.io/redis-adapter": "^8.3.0",
     "axios": "^1.7.9",
     "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "httpolyglot": "^0.1.2",
@@ -25,6 +27,5 @@
     "socket.io": "^4.8.1",
     "socket.io-redis": "^5.4.0",
     "uuid": "^11.0.3"
-  },
-  "type": "module"
+  }
 }
