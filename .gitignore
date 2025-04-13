@@ -5,6 +5,7 @@ yarn-error.log
 
 # Environment files
 .env
+.env.*
 
 # Logs
 logs/
