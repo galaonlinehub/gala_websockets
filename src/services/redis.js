@@ -9,9 +9,10 @@ export async function initRedisClient() {
   if (redisClient) return redisClient;
   
   redisClient = createClient({
-    url: config.redis.url,
-    password: config.redis.password,
-    database: config.redis.db,
+    url:"redis://default:Gala@2024@5.75.156.12:6379",
+    // url: config.redis.url,
+    // password: config.redis.password,
+    // database: config.redis.db,
     socket: {
       reconnectStrategy: (retries) => {
         if (retries > config.redis.maxRetries) {
