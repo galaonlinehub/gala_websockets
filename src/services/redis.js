@@ -10,19 +10,8 @@ export async function initRedisClient() {
 
   redisClient = createClient({
     url: config.redis.url,
-
-    // database: 0,
-    // password: config.redis.password,
-    // database: config.redis.db,
-    // socket: {
-    //   reconnectStrategy: (retries) => {
-    //     if (retries > config.redis.maxRetries) {
-    //       logger.error(`Redis connection failed after ${retries} attempts`);
-    //       return new Error("Redis connection failed");
-    //     }
-    //     return config.redis.retryDelay;
-    //   },
-    // },
+    password: config.redis.password,
+   
   });
 
   redisClient.on("error", (err) => {
@@ -62,3 +51,16 @@ export async function subscribeToChannel(channel, callback) {
   await subscriber.subscribe(channel, callback);
   logger.info(`Subscribed to Redis channel: ${channel}`);
 }
+
+
+
+ // database: config.redis.db,
+    // socket: {
+    //   reconnectStrategy: (retries) => {
+    //     if (retries > config.redis.maxRetries) {
+    //       logger.error(`Redis connection failed after ${retries} attempts`);
+    //       return new Error("Redis connection failed");
+    //     }
+    //     return config.redis.retryDelay;
+    //   },
+    // },
