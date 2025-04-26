@@ -1,5 +1,11 @@
-import dotenv from 'dotenv';
-dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
+import dotenv from "dotenv";
+import { logger } from "./utils/logger.js";
+
+if (process.env.NODE_ENV === "production") {
+  logger.info("WE ARE IN");
+  dotenv.config({ path: `/var/www/nodejs/.env.${process.env.NODE_ENV}` });
+}
+logger.info("WE WERE NEVER IN");
 
 import https from "httpolyglot";
 import fs from "fs";
@@ -9,7 +15,6 @@ import { setupApp } from "./app.js";
 import { initSocketIO } from "./services/socketio.js";
 import { initRedisClient } from "./services/redis.js";
 import { setupNamespaces } from "./namespaces/index.js";
-import { logger } from "./utils/logger.js";
 
 async function startServer() {
   try {
@@ -44,37 +49,34 @@ async function startServer() {
   }
 }
 
-
 function setupGracefulShutdown(server, redisClient) {
   const shutdown = async () => {
-    logger.info('Shutting down server...');
-    
+    logger.info("Shutting down server...");
+
     server.close(() => {
-      logger.info('HTTP server closed');
+      logger.info("HTTP server closed");
     });
-    
+
     try {
       await redisClient.disconnect();
-      logger.info('Redis connection closed');
+      logger.info("Redis connection closed");
     } catch (error) {
-      logger.error('Error closing Redis connection:', error);
+      logger.error("Error closing Redis connection:", error);
     }
-    
+
     process.exit(0);
   };
 
+  process.on("SIGTERM", shutdown);
+  process.on("SIGINT", shutdown);
 
-
-  process.on('SIGTERM', shutdown);
-  process.on('SIGINT', shutdown);
-  
-  process.on('uncaughtException', (error) => {
-    logger.error('Uncaught exception:', error);
+  process.on("uncaughtException", (error) => {
+    logger.error("Uncaught exception:", error);
     shutdown();
   });
-  
-  process.on('unhandledRejection', (error) => {
-    logger.error('Unhandled rejection:', error);
+
+  process.on("unhandledRejection", (error) => {
+    logger.error("Unhandled rejection:", error);
     shutdown();
   });
 }
