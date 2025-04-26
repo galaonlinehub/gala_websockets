@@ -8,7 +8,6 @@ let redisSubscriber = null;
 export async function initRedisClient() {
   if (redisClient) return redisClient;
 
-  logger.info("URL", config.redis.url);
   redisClient = createClient({
     url: config.redis.url,
 
