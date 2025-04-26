@@ -7,7 +7,14 @@ let redisSubscriber = null;
 
 export async function initRedisClient() {
   if (redisClient) return redisClient;
-
+  logger.info(
+    `${
+      (config.redis.host,
+      config.redis.port,
+      config.redis.user,
+      config.redis.password)
+    }`
+  );
   redisClient = new Redis({
     host: config.redis.host,
     port: config.redis.port,
