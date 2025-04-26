@@ -1,5 +1,4 @@
 
-import './config/env.js';
 import https from "httpolyglot";
 import fs from "fs";
 import { createServer } from "http";

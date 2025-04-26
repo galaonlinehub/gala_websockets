@@ -12,6 +12,8 @@ export async function initRedisClient() {
     `${x} ${config.redis.host} ${config.redis.port} ${config.redis.user} ${config.redis.password}`
   );
 
+  logger.info(config.redis.maxRetries);
+
   redisClient = new Redis({
     host: config.redis.host,
     port: config.redis.port,
