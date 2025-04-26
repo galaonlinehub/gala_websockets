@@ -9,10 +9,10 @@ export async function initRedisClient() {
   if (redisClient) return redisClient;
 
   redisClient = new Redis({
-    host: "5.75.156.12",
-    port: 6379,
-    username: "default", // Explicitly set username
-    password: "Gala@2024", // Use exactly what worked in the CLI
+    host: config.redis.host,
+    port: config.redis.port,
+    username: config.redis.user,
+    password: config.redis.password,
     db: config.redis.db || 0,
     retryStrategy: (times) => {
       if (times > config.redis.maxRetries) {
@@ -31,14 +31,12 @@ export async function initRedisClient() {
     logger.info("Connected to Redis");
   });
 
-  // Wait for client to be ready before proceeding
   await new Promise((resolve) => {
     redisClient.once("ready", resolve);
   });
 
   redisSubscriber = redisClient.duplicate();
 
-  // Wait for subscriber to be ready
   await new Promise((resolve) => {
     redisSubscriber.once("ready", () => {
       logger.info("Redis subscriber client connected");
