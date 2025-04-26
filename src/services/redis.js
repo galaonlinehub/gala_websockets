@@ -16,7 +16,7 @@ export async function initRedisClient() {
   const retryDelay = config.redis.retryDelay || process.env.REDIS_RETRY_DELAY;
   const db = config.redis.db || process.env.REDIS_DB;
 
-  logger.info(`Connecting to Redis at ${host}:${port} with user ${user}`);
+  logger.info(`Connecting to Redis at ${host}:${port} with user ${username}`);
 
   redisClient = new Redis({
     host,
