@@ -1,11 +1,3 @@
-import dotenv from "dotenv";
-import { logger } from "./utils/logger.js";
-
-if (process.env.NODE_ENV === "production") {
-  logger.info("WE ARE IN");
-  dotenv.config({ path: `/var/www/nodejs/.env.${process.env.NODE_ENV}` });
-}
-logger.info("WE WERE NEVER IN");
 
 import https from "httpolyglot";
 import fs from "fs";
@@ -15,6 +7,7 @@ import { setupApp } from "./app.js";
 import { initSocketIO } from "./services/socketio.js";
 import { initRedisClient } from "./services/redis.js";
 import { setupNamespaces } from "./namespaces/index.js";
+import { logger } from "./utils/logger.js";
 
 async function startServer() {
   try {

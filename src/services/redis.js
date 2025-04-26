@@ -7,25 +7,29 @@ let redisSubscriber = null;
 
 export async function initRedisClient() {
   if (redisClient) return redisClient;
-  const x = "DENIS PASCAL MGAYA";
-  logger.info(
-    `${x} ${config.redis.host} ${config.redis.port} ${config.redis.user} ${config.redis.password}`
-  );
 
-  logger.info(config.redis.maxRetries);
+  const host = config.redis.host || process.env.REDIS_HOST;
+  const port = config.redis.port || process.env.REDIS_PORT;
+  const username = config.redis.user || process.env.REDIS_USER;
+  const password = config.redis.password || process.env.REDIS_PASSWORD;
+  const maxRetries = config.redis.maxRetries || process.env.REDIS_MAX_RETRIES;
+  const retryDelay = config.redis.retryDelay || process.env.REDIS_RETRY_DELAY;
+  const db = config.redis.db || process.env.REDIS_DB;
+
+  logger.info(`Connecting to Redis at ${host}:${port} with user ${user}`);
 
   redisClient = new Redis({
-    host: config.redis.host,
-    port: config.redis.port,
-    username: config.redis.user,
-    password: config.redis.password,
-    db: config.redis.db || 0,
+    host,
+    port,
+    username,
+    password,
+    db,
     retryStrategy: (times) => {
-      if (times > config.redis.maxRetries) {
+      if (times > maxRetries) {
         logger.error(`Redis connection failed after ${times} attempts`);
         return false;
       }
-      return config.redis.retryDelay;
+      return retryDelay;
     },
   });
 
