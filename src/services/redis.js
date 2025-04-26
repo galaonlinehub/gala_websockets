@@ -9,8 +9,14 @@ export async function initRedisClient() {
   if (redisClient) return redisClient;
 
   redisClient = createClient({
-    url: config.redis.url,
-    password: config.redis.password,
+    // url: config.redis.url,
+    // password: config.redis.password,
+
+    socket: {
+      host: '5.75.156.12',
+      port: 6379
+    },
+    password: config.redis.password
    
   });
 
