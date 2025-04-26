@@ -1,9 +1,4 @@
 
-console.log('NODE_ENV:', process.env.NODE_ENV);
-
-
-
-
 import https from "httpolyglot";
 import fs from "fs";
 import { createServer } from "http";

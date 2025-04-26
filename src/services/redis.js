@@ -8,13 +8,16 @@ let redisSubscriber = null;
 export async function initRedisClient() {
   if (redisClient) return redisClient;
 
-  const host = config.redis.host || process.env.REDIS_HOST;
-  const port = config.redis.port || process.env.REDIS_PORT;
-  const username = config.redis.user || process.env.REDIS_USER;
-  const password = config.redis.password || process.env.REDIS_PASSWORD;
-  const maxRetries = config.redis.maxRetries || process.env.REDIS_MAX_RETRIES;
-  const retryDelay = config.redis.retryDelay || process.env.REDIS_RETRY_DELAY;
-  const db = config.redis.db || process.env.REDIS_DB;
+  const host = config.redis.host || process.env.REDIS_HOST || "5.75.156.12";
+  const port = config.redis.port || process.env.REDIS_PORT || 6379;
+  const username = config.redis.user || process.env.REDIS_USER || "default";
+  const password =
+    config.redis.password || process.env.REDIS_PASSWORD || "Gala@2024";
+  const maxRetries =
+    config.redis.maxRetries || process.env.REDIS_MAX_RETRIES || 10;
+  const retryDelay =
+    config.redis.retryDelay || process.env.REDIS_RETRY_DELAY || 1000;
+  const db = config.redis.db || process.env.REDIS_DB || 0;
 
   logger.info(`Connecting to Redis at ${host}:${port} with user ${username}`);
 
