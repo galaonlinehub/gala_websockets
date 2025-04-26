@@ -7,9 +7,11 @@ let redisSubscriber = null;
 
 export async function initRedisClient() {
   if (redisClient) return redisClient;
+  const x = "DENIS PASCAL MGAYA";
   logger.info(
     `${
-      (config.redis.host,
+      (x,
+      config.redis.host,
       config.redis.port,
       config.redis.user,
       config.redis.password)
