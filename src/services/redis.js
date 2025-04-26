@@ -9,14 +9,9 @@ export async function initRedisClient() {
   if (redisClient) return redisClient;
   const x = "DENIS PASCAL MGAYA";
   logger.info(
-    `${
-      (x,
-      config.redis.host,
-      config.redis.port,
-      config.redis.user,
-      config.redis.password)
-    }`
+    `${x} ${config.redis.host} ${config.redis.port} ${config.redis.user} ${config.redis.password}`
   );
+
   redisClient = new Redis({
     host: config.redis.host,
     port: config.redis.port,
