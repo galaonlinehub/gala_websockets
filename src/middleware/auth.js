@@ -6,6 +6,10 @@ import api from "../services/api.js";
 
 export function authenticateSocket(socket, next) {
   const token = socket.handshake.auth?.token;
+  logger.info("Socket authentication token:", token);
+  logger.info("Full handshake", socket.handshake);
+
+  logger.info("USER ID", socket.handshake.query.user_id);
 
   if (!token) {
     logger.error("Socket authentication failed: No token provided");
