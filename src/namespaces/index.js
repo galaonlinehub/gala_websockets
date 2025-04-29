@@ -25,7 +25,7 @@ async function setupRedisSubscriptions(redisClient, namespaces) {
   await subscribeToChannel("galaeducation_database_payments", (message) => {
     try {
       const parsedMessage = JSON.parse(message);
-
+      console.log(parsedMessage)
       if (parsedMessage.event === "payments.event") {
         const { clientEmail: email, message: paymentMessage } =
           parsedMessage.data;
