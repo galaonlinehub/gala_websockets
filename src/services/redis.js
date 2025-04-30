@@ -60,7 +60,6 @@ export async function initRedisClient() {
   return redisClient;
 }
 
-// The rest of your functions remain the same
 
 export function getRedisClient() {
   if (!redisClient) {
@@ -78,17 +77,15 @@ export function getRedisSubscriber() {
 
 export async function subscribeToChannel(channel, callback) {
   const subscriber = getRedisSubscriber();
-  await subscriber.subscribe(channel, callback);
+  // await subscriber.subscribe(channel, callback);
+  subscriber.on("message", (subscribedChannel, message) => {
+    if (subscribedChannel === channel) {
+      callback(message);
+    }
+  });
+
+  await subscriber.subscribe(channel);
   logger.info(`Subscribed to Redis channel: ${channel}`);
 }
 
-// database: config.redis.db,
-// socket: {
-//   reconnectStrategy: (retries) => {
-//     if (retries > config.redis.maxRetries) {
-//       logger.error(`Redis connection failed after ${retries} attempts`);
-//       return new Error("Redis connection failed");
-//     }
-//     return config.redis.retryDelay;
-//   },
-// },
+

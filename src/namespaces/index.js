@@ -24,11 +24,41 @@ export function setupNamespaces(io, redisClient) {
 async function setupRedisSubscriptions(redisClient, namespaces) {
   await subscribeToChannel("galaeducation_database_payments", (message) => {
     try {
-      const parsedMessage = JSON.parse(message);
+      if (!message) {
+        logger.warn("Received empty Redis message");
+        return;
+      }
+
+      let parsedMessage;
+      try {
+        parsedMessage = JSON.parse(message);
+      } catch (parseErr) {
+        logger.warn("Failed to parse Redis message as JSON:", message);
+        return;
+      }
+
+      if (
+        !parsedMessage ||
+        typeof parsedMessage !== "object" ||
+        !parsedMessage.event ||
+        !parsedMessage.data
+      ) {
+        logger.warn("Invalid Redis message format:", parsedMessage);
+        return;
+      }
 
       if (parsedMessage.event === "payments.event") {
         const { clientEmail: email, message: paymentMessage } =
           parsedMessage.data;
+
+        if (!email || !paymentMessage) {
+          logger.warn(
+            "Missing email or paymentMessage in Redis data:",
+            parsedMessage.data
+          );
+          return;
+        }
+
         namespaces.payment.to(email).emit("paymentResponse", paymentMessage);
         logger.info(`Payment event sent to ${email}`);
       }
@@ -36,8 +66,6 @@ async function setupRedisSubscriptions(redisClient, namespaces) {
       logger.error("Error processing payment message:", error);
     }
   });
-
-  // Add other channel subscriptions as needed
 
   logger.info("Redis subscriptions setup complete");
 }
