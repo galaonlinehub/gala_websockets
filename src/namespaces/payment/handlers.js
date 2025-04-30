@@ -1,3 +1,7 @@
 export const handleEmailJoin = (s, { email }) => {
-  s.join(email);
+  if (email) {
+    s.join(email);
+  } else {
+    console.warn("No email provided in join event.");
+  }
 };
