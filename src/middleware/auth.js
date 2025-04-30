@@ -29,6 +29,8 @@ export function authenticateSocket(socket, next) {
       api.defaults.headers.common.Authorization = `Bearer ${token}`;
       const response = await api.get(`user`);
 
+      logger.info("User response:", response.data);
+
       socket.user = response.data;
       socket.token = token;
 

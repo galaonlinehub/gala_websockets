@@ -2,7 +2,8 @@ import axios from "axios";
 import { config } from "../config/index.js";
 
 const api = axios.create({
-  baseURL: config.apiBaseUrl,
+  // baseURL: config.apiBaseUrl,
+  baseURL: "https://galaweb.galahub.org/api/",
   headers: {
     "Content-Type": "application/json",
   },
@@ -17,7 +18,6 @@ const api = axios.create({
 //   },
 //   (error) => Promise.reject(error)
 // );
-
 
 api.interceptors.response.use(
   (response) => response,

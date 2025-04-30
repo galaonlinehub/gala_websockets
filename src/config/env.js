@@ -9,7 +9,7 @@ export const envConfig = {
   env: process.env.NODE_ENV,
   port: process.env.PORT,
   baseUrl: process.env.BASE_URL,
-  apiBaseUrl: process.env.API_BASE_URL,
+  apiBaseUrl: process.env.API_BASE_URL ,
   jwtPublicKey: process.env.PASSPORT_PUBLIC_KEY,
   corsOrigins: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : '*',
   serveStatic: process.env.SERVE_STATIC === 'true',
