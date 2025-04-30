@@ -5,7 +5,10 @@ import { logger } from "../utils/logger.js";
 import api from "../services/api.js";
 
 export function authenticateSocket(socket, next) {
-  const token = socket.handshake.auth?.token;
+  const token =
+    socket.handshake.auth?.token ||
+    socket.handshake.headers?.authorization?.replace("Bearer ", "") ||
+    socket.handshake.query?.token;
   logger.info("Socket authentication token:", token);
   logger.info("Full handshake", socket.handshake);
 
