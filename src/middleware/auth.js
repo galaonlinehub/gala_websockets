@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken";
-import axios from "axios";
 import { config } from "../config/index.js";
 import { logger } from "../utils/logger.js";
 import api from "../services/api.js";
@@ -15,6 +14,8 @@ export function authenticateSocket(socket, next) {
     logger.error("Socket authentication failed: No token provided");
     return next(new Error("Authentication error: No token provided"));
   }
+
+  logger.info(`THIS IS JUST US ${config.jwtPublicKey}`);
 
   jwt.verify(token, config.jwtPublicKey, async (err, decoded) => {
     if (err) {
