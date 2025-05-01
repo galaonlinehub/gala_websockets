@@ -1,17 +1,30 @@
-import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
 import { logger } from "../utils/logger.js";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const rootDir = path.resolve(__dirname, "../../");
+
 const env = process.env.NODE_ENV;
-logger.info(`Environment: ${env}`);
-logger.info(`path: ${path.resolve()}`);
+
 if (!env) {
   logger.error("NODE_ENV is not set");
   throw new Error("NODE_ENV is not set");
 }
 
-dotenv.config({ path: `.env.${env}` });
+const envPath = path.resolve(rootDir, `.env.${env}`);
+logger.info(`Looking for env file at: ${envPath}`);
+
+if (fs.existsSync(envPath)) {
+  logger.info(`Loading env from: ${envPath}`);
+  dotenv.config({ path: envPath });
+} else {
+  logger.warn(`Env file not found at ${envPath}, using process.env values`);
+}
 
 export const envConfig = {
   env: process.env.NODE_ENV,
