@@ -4,8 +4,11 @@ import path from "path";
 import { config } from "./config/index.js";
 import { errorMiddleware } from "./middleware/error.js";
 import routes from "./routes/index.js";
+import { fileURLToPath } from "url";
+import { logger } from "./utils/logger.js";
 
-const __dirname = path.resolve();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export function setupApp() {
   const app = express();
@@ -23,7 +26,7 @@ export function setupApp() {
   app.use("/api", routes);
 
   app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "src/views/index.html"));
+    res.sendFile(path.join(__dirname, "views/index.html"));
   });
 
   if (config.serveStatic) {
