@@ -10,6 +10,8 @@ import { setupNamespaces } from "./namespaces/index.js";
 import { logger } from "./utils/logger.js";
 
 async function startServer() {
+  logger.info("Starting server...");
+  logger.info(`Environment: ${config.env}`);
   try {
     const redisClient = await initRedisClient();
     const app = setupApp();

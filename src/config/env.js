@@ -4,6 +4,8 @@ import path from "path";
 import { logger } from "../utils/logger.js";
 
 const env = process.env.NODE_ENV;
+logger.info(`Environment: ${env}`);
+logger.info(`path: ${path.resolve()}`);
 if (!env) {
   logger.error("NODE_ENV is not set");
   throw new Error("NODE_ENV is not set");
