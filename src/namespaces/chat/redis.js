@@ -1,24 +1,24 @@
 
 export const getChatMessages = async (chatId, limit, client) => {
-    return client.lrange(`chat:${chatId}:messages`, -limit, -1);
+    return client.lRange(`chat:${chatId}:messages`, -limit, -1);
   };
   
   export const storeMessage = async (chatId, message, client) => {
     const messageKey = `chat:${chatId}:messages`;
-    return (await client.rpush(messageKey, JSON.stringify(message))) - 1; 
+    return (await client.rPush(messageKey, JSON.stringify(message))) - 1; 
   };
   
   export const getParticipants = async (chatId, client) => {
-    return client.lrange(`chat:${chatId}:participants`, 0, -1);
+    return client.lRange(`chat:${chatId}:participants`, 0, -1);
   };
   
   export const addParticipant = async (chatId, userId, client) => {
-    return client.rpush(`chat:${chatId}:participants`, userId);
+    return client.rPush(`chat:${chatId}:participants`, userId);
   };
   
   export const markMessageDelivered = async (chatId, userId, messageId, client) => {
     const deliveredKey = `delivered:${chatId}:${userId}`;
-    return client.sadd(deliveredKey, String(messageId));
+    return client.sAdd(deliveredKey, String(messageId));
   };
   
   export const incrementUnreadCount = async (userId, chatId, client) => {
@@ -35,7 +35,7 @@ export const getChatMessages = async (chatId, limit, client) => {
   
   export const markMessageRead = async (chatId, userId, messageIds, client) => {
     const readKey = `read:${chatId}:${userId}`;
-    return client.sadd(readKey, messageIds.map(String));
+    return client.sAdd(readKey, messageIds.map(String));
   };
   
 

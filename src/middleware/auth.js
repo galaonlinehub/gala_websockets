@@ -10,9 +10,6 @@ export function authenticateSocket(socket, next) {
     socket.handshake.headers?.authorization?.replace("Bearer ", "") ||
     socket.handshake.query?.token;
   logger.info("Socket authentication token:", token);
-  logger.info("Full handshake", socket.handshake);
-
-  logger.info("USER ID", socket.handshake.query.user_id);
 
   if (!token) {
     logger.error("Socket authentication failed: No token provided");
@@ -20,10 +17,10 @@ export function authenticateSocket(socket, next) {
   }
 
   jwt.verify(token, config.jwtPublicKey, async (err, decoded) => {
-    // if (err) {
-    //   logger.error("JWT verification error:", err);
-    //   return next(new Error("Authentication error: Invalid token"));
-    // }
+    if (err) {
+      logger.error("JWT verification error:", err);
+      return next(new Error("Authentication error: Invalid token"));
+    }
 
     try {
       api.defaults.headers.common.Authorization = `Bearer ${token}`;
