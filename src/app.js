@@ -5,7 +5,6 @@ import { config } from "./config/index.js";
 import { errorMiddleware } from "./middleware/error.js";
 import routes from "./routes/index.js";
 import { fileURLToPath } from "url";
-import { logger } from "./utils/logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

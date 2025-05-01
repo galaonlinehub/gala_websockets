@@ -8,14 +8,11 @@ export function authenticateSocket(socket, next) {
     socket.handshake.auth?.token ||
     socket.handshake.headers?.authorization?.replace("Bearer ", "") ||
     socket.handshake.query?.token;
-  logger.info("Socket authentication token:", token);
 
   if (!token) {
     logger.error("Socket authentication failed: No token provided");
     return next(new Error("Authentication error: No token provided"));
   }
-
-  logger.info(`THIS IS JUST US ${config.jwtPublicKey}`);
 
   jwt.verify(token, config.jwtPublicKey, async (err, decoded) => {
     if (err) {
@@ -26,6 +23,17 @@ export function authenticateSocket(socket, next) {
     try {
       api.defaults.headers.common.Authorization = `Bearer ${token}`;
       const response = await api.get(`user`);
+
+      if (response.status !== 200) {
+        const message =
+          response?.data?.message ||
+          response?.response?.data?.message ||
+          "Unknown error";
+        logger.error(
+          `API authentication error: Invalid response ${response?.status} and message ${message}`
+        );
+        return next(new Error("Authentication error: Invalid response"));
+      }
 
       socket.user = response.data;
       socket.token = token;

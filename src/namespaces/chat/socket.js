@@ -13,6 +13,13 @@ export function chatSocket(namespace, redisClient) {
   namespace.on("connection", (socket) => {
     const userId = socket.user?.id || socket.handshake.query.user_id;
 
+    if (!userId) {
+      logger.error(
+        `Chat Namespace: User ID not found in socket connection ${userId}`
+      );
+      return socket.disconnect();
+    }
+
     logger.info(`User ${userId} connected to chat namespace`);
 
     socket.join(`user:${userId}`);
