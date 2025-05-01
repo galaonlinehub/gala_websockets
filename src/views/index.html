@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Gala Sockets</title>
+    <style>
+        body {
+            margin: 0; 
+        }
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column; 
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px; 
+            font-size: 1.2em;
+            margin-top: 10px; 
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            background-color: green;
+            border-radius: 50%; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gala Sockets</h1>
+        <div class="status">
+            <span class="dot"></span>
+            <span>Running</span>
+        </div>
+    </div>
+</body>
+</html>
