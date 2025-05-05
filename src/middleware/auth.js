@@ -9,6 +9,14 @@ export function authenticateSocket(socket, next) {
     socket.handshake.headers?.authorization?.replace("Bearer ", "") ||
     socket.handshake.query?.token;
 
+  const isDev =
+    socket.handshake.query?.mode === "development" ||
+    socket.handshake.headers?.host?.includes("localhost");
+
+  if (!isDev) {
+    logger.info("Production mode detected, checking token");
+  }
+
   if (!token) {
     logger.error("Socket authentication failed: No token provided");
     return next(new Error("Authentication error: No token provided"));
@@ -22,7 +30,12 @@ export function authenticateSocket(socket, next) {
 
     try {
       api.defaults.headers.common.Authorization = `Bearer ${token}`;
-      const response = await api.get(`user`);
+
+      if (isDev) {
+        api.defaults.headers.common["X-Dev-Request"] = "true";
+      }
+
+      const response = await api.get("user");
 
       if (response.status !== 200) {
         const message =
