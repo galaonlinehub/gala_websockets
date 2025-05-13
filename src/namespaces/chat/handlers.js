@@ -9,7 +9,7 @@ import {
   resetUnreadCount,
   markMessageRead,
 } from "./redis.js";
-import { post } from "../../services/api.js";
+import { makeAuthenticatedRequest } from "../../services/api.js";
 import { logger } from "../../utils/logger.js";
 import {
   updateMessageStatus,
@@ -32,12 +32,15 @@ export async function handleJoinChat(socket, chatId, redisClient) {
 
   logger.debug(`User ${userId} joined chat ${chatId}`);
 
-  // Store the current chat ID for the socket to use on disconnect
   await redisClient.set(`user:${socket.id}:chat`, chatId);
 }
 
 export async function handleSocialConnect(socket, userId, chats, redisClient) {
   if (!chats || chats.length === 0) return;
+  const context = {
+    token: socket.token,
+    isDev: socket.isDev,
+  };
 
   socket.join(chats);
 
@@ -80,7 +83,7 @@ export async function handleSocialConnect(socket, userId, chats, redisClient) {
         toMarkDelivered.map((id) => ({ message_id: id })),
         userId,
         "delivered",
-        socket.token
+        context
       );
     }
   }
@@ -91,11 +94,15 @@ export async function handleSocialConnect(socket, userId, chats, redisClient) {
     device_info: socket.handshake.headers["user-agent"] || null,
   };
 
-  await updateUserStatus(userStatusData, socket.token);
+  await updateUserStatus(userStatusData, context);
 }
 
 export async function handleSendMessage(socket, data, namespace, redisClient) {
   const { chat_id, content, type, sender_id } = data;
+  const context = {
+    token: socket.token,
+    isDev: socket.isDev,
+  };
 
   const rawSentAt = new Date();
   const formattedSentAt = format(rawSentAt, "HH:mm a").toLowerCase();
@@ -162,7 +169,8 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
   }
 
   const payload = { ...message, deliveredUserIds };
-  const result = await post("/chat/messages", payload, socket.token);
+  const client = makeAuthenticatedRequest(context.token, context.isDev);
+  const result = await client.post("/chat/messages", payload);
 
   if (result?.data?.id) {
     const oldMessageId = String(tempMessageId);
@@ -180,7 +188,6 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
       JSON.stringify(message)
     );
 
-    // Update delivery status with new ID
     for (const id of deliveredUserIds) {
       const key = `delivered:${chat_id}:${id}`;
       if (await redisClient.sRem(key, oldMessageId)) {
@@ -189,7 +196,7 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
     }
   }
 
-  await updateUnreadCounts(unreadCountsPayload, chat_id, socket.token);
+  await updateUnreadCounts(unreadCountsPayload, chat_id, context);
 }
 
 export async function handleMessageRead(socket, data, namespace, redisClient) {
@@ -223,7 +230,7 @@ export async function handleMessageRead(socket, data, namespace, redisClient) {
   );
 }
 
-export function handleTyping(socket, data, namespace) {
+export function handleTyping(socket, data, _namespace) {
   const { chat_id, user_id } = data;
 
   socket.to(chat_id).emit("user_typing", { user_id });
@@ -231,7 +238,7 @@ export function handleTyping(socket, data, namespace) {
   socket.to(chat_id).emit("sidebar_typing", { chat_id, user_id });
 }
 
-export function handleStopTyping(socket, data, namespace) {
+export function handleStopTyping(socket, data, _namespace) {
   const { chat_id, user_id } = data;
 
   socket.to(chat_id).emit("user_stop_typing", { user_id });
@@ -241,7 +248,7 @@ export function handleStopTyping(socket, data, namespace) {
 
 export async function handleDisconnect(socket, userId, namespace, redisClient) {
   const chatId = await redisClient.get(`user:${socket.id}:chat`);
-  console.log("USER IS LEAVING...")
+  console.log("USER IS LEAVING...");
   if (chatId) {
     socket.to(chatId).emit("user_offline", {
       user_id: userId,

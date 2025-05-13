@@ -1,7 +1,6 @@
 import { setupChatNamespace } from "./chat/index.js";
 import { subscribeToChannel } from "../services/redis.js";
 import { logger } from "../utils/logger.js";
-import { config } from "../config/index.js";
 import { setupPaymentNamespace } from "./payment/index.js";
 
 export function setupNamespaces(io, redisClient) {
@@ -34,6 +33,7 @@ async function setupRedisSubscriptions(redisClient, namespaces) {
         parsedMessage = JSON.parse(message);
       } catch (parseErr) {
         logger.warn("Failed to parse Redis message as JSON:", message);
+        logger.error(`This is the error ${parseErr}`)
         return;
       }
 

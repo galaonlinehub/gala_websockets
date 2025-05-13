@@ -2,7 +2,6 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { createClient } from "@redis/client";
-import axios from "axios";
 import { format } from "date-fns";
 import { post, put } from "../../services/api.js";
 
@@ -196,7 +195,7 @@ io.on("connection", (socket) => {
     io.to(chat_id).emit("sidebar_unread_reset", { chat_id, unread_count: 0 });
 
     await updateMessageStatus(messages, user_id, "read");
-    const res = await unreadCount([{ user_id, unread_count: 0 }], chat_id);
+    await unreadCount([{ user_id, unread_count: 0 }], chat_id);
   });
 
   socket.on("join_chat", async (chat_id) => {

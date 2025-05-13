@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { config } from "../config/index.js";
 import { logger } from "../utils/logger.js";
-import api from "../services/api.js";
+import { makeAuthenticatedRequest } from "../services/api.js";
 
 export function authenticateSocket(socket, next) {
   const token =
@@ -22,25 +22,19 @@ export function authenticateSocket(socket, next) {
     return next(new Error("Authentication error: No token provided"));
   }
 
-  jwt.verify(token, config.jwtPublicKey, async (err, decoded) => {
+  jwt.verify(token, config.jwtPublicKey, async (err, _decoded) => {
     if (err) {
       logger.error("JWT verification error:", err);
       return next(new Error("Authentication error: Invalid token"));
     }
 
     try {
-      api.defaults.headers.common.Authorization = `Bearer ${token}`;
+      const client = makeAuthenticatedRequest(token, isDev);
+      logger.info(
+        "Headers: " + JSON.stringify(client.defaults.headers.common, null, 2)
+      );
 
-      if (isDev) {
-        api.defaults.headers.common["X-Dev-Request"] = "true";
-        logger.info("WE ARE IN HERE ITS DEV MODE");
-      }
-
-      api.defaults.headers.common["X-Source"] = "sfu";
-
-      logger.info(`Headers: ${JSON.stringify(api.defaults.headers.common, null, 2)}`);
-
-      const response = await api.get("user");
+      const response = await client.get("user");
 
       if (response.status !== 200) {
         const message =
@@ -55,6 +49,7 @@ export function authenticateSocket(socket, next) {
 
       socket.user = response.data;
       socket.token = token;
+      socket.isDev = isDev;
 
       logger.info(`User authenticated: ${socket.user.id || "unknown"}`);
       next();

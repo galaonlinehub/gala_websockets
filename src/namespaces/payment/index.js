@@ -1,4 +1,4 @@
-import { authenticateNamespace } from "../../middleware/auth.js";
+// import { authenticateNamespace } from "../../middleware/auth.js";
 import { logger } from "../../utils/logger.js";
 import { paymentSocket } from "./socket.js";
 
