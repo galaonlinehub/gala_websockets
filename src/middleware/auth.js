@@ -35,6 +35,8 @@ export function authenticateSocket(socket, next) {
         api.defaults.headers.common["X-Dev-Request"] = "true";
       }
 
+      logger.info(`Headers ${api.defaults.headers}`); return;
+
       const response = await api.get("user");
 
       if (response.status !== 200) {
