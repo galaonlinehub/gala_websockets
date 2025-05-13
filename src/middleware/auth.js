@@ -35,6 +35,8 @@ export function authenticateSocket(socket, next) {
         api.defaults.headers.common["X-Dev-Request"] = "true";
       }
 
+      api.defaults.headers.common["X-Source"] = "sfu";
+
         logger.info(`Headers: ${JSON.stringify(api.defaults.headers.common, null, 2)}`);
 
       const response = await api.get("user");
