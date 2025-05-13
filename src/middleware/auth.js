@@ -34,13 +34,11 @@ export function authenticateSocket(socket, next) {
       if (isDev) {
         api.defaults.headers.common["X-Dev-Request"] = "true";
         logger.info("WE ARE IN HERE ITS DEV MODE");
-      }else{
-        logger.info("ITS PRODUCTION MODE");
       }
 
       api.defaults.headers.common["X-Source"] = "sfu";
 
-      // logger.info(`Headers: ${JSON.stringify(api.defaults.headers.common, null, 2)}`);
+      logger.info(`Headers: ${JSON.stringify(api.defaults.headers.common, null, 2)}`);
 
       const response = await api.get("user");
 
