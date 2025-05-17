@@ -29,11 +29,8 @@ export function authenticateSocket(socket, next) {
     }
 
     try {
-      const client = makeAuthenticatedRequest(token, isDev);
-      logger.info(
-        "Headers: " + JSON.stringify(client.defaults.headers.common, null, 2)
-      );
-
+     const client = makeAuthenticatedRequest(token, isDev);
+   
       const response = await client.get("user");
 
       if (response.status !== 200) {
@@ -51,8 +48,7 @@ export function authenticateSocket(socket, next) {
       socket.token = token;
       socket.isDev = isDev;
 
-      logger.info(`User authenticated: ${socket.user.id || "unknown"}`);
-      next();
+    
     } catch (error) {
       logger.error("API authentication error:", error);
       return next(

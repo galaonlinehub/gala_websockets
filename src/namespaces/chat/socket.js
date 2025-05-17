@@ -20,8 +20,6 @@ export function chatSocket(namespace, redisClient) {
       return socket.disconnect();
     }
 
-    logger.info(`User ${userId} connected to chat namespace`);
-
     socket.join(`user:${userId}`);
 
     socket.on("join_chat", async (chatId) =>
