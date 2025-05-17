@@ -36,6 +36,7 @@ export async function handleJoinChat(socket, chatId, redisClient) {
   logger.info(`THESE ARE PARTICIPANTS ${participants}`);
 
   if (!participants.includes(String(userId))) {
+    logger.info(`we are addding ${userId} ${socket.user.id}`)
     await addParticipant(chatId, userId, redisClient);
     logger.info(`Added ${userId} to participants of chat ${chatId}`);
   }
