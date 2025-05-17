@@ -109,7 +109,7 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
   const tempMessageId = Date.now();
 
   const participants = await getParticipants(chat_id, redisClient);
-  logger.info(`particaipants ${participants} ${Date.now()}`); return;
+  logger.info(`particaipants ${participants} ${Date.now()}`);
 
   const message = {
     message_id: tempMessageId,

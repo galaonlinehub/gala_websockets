@@ -24,7 +24,7 @@ export const getChatMessages = async (chatId, limit, client) => {
   export const incrementUnreadCount = async (userId, chatId, client) => {
     const unreadKey = `unread:${userId}:${chatId}`;
     await client.incr(unreadKey);
-    return client.get(unreadKey); // Return the new unread count
+    return client.get(unreadKey); 
   };
   
   export const resetUnreadCount = async (userId, chatId, client) => {
