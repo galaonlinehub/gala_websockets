@@ -17,8 +17,11 @@ import {
   updateUnreadCounts,
 } from "./helpers.js";
 
-export async function handleJoinChat(socket, chatId, redisClient) {
+export async function handleJoinChat(socket, initialChat, redisClient) {
   const userId = socket.user.id || socket.handshake.query.user_id;
+
+  const {chatId, startParticipants} = initialChat;
+  const withUser = [...startParticipants, userId];
 
   if (!chatId) {
     logger.info("No chat Id has been provided");
@@ -31,7 +34,7 @@ export async function handleJoinChat(socket, chatId, redisClient) {
   const participants = await getParticipants(chatId, redisClient);
 
   if (!participants.includes(String(userId))) {
-    await addParticipant(chatId, userId, redisClient);
+    await addParticipant(chatId, withUser, redisClient);
     logger.info(`Added ${userId} to participants of chat ${chatId}`);
   }
 

@@ -22,8 +22,8 @@ export function chatSocket(namespace, redisClient) {
 
     socket.join(`user:${userId}`);
 
-    socket.on("join_chat", async (chatId) =>
-      handleJoinChat(socket, chatId, redisClient)
+    socket.on("join_chat", async (initialChat) =>
+      handleJoinChat(socket, initialChat, redisClient)
     );
 
     socket.on("social", async (userId, chats) =>
