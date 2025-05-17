@@ -19,6 +19,11 @@ import {
 
 export async function handleJoinChat(socket, chatId, redisClient) {
   const userId = socket.user.id || socket.handshake.query.user_id;
+  logger.info(`${chatId} and ${socket}`);
+  if(!chatId){
+    logger.info("No chat Id has been provided");
+    return;
+  }
 
   socket.join(chatId);
 
