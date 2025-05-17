@@ -18,8 +18,6 @@ import {
 } from "./helpers.js";
 
 export async function handleJoinChat(socket, chatId, redisClient) {
-  logger.info(`JOIN CHAT IS EMITTED RIGHT ${chatId} , ${socket}`)
-
   const userId = socket.user.id || socket.handshake.query.user_id;
 
   if (!chatId) {
@@ -36,7 +34,6 @@ export async function handleJoinChat(socket, chatId, redisClient) {
   logger.info(`THESE ARE PARTICIPANTS ${participants}`);
 
   if (!participants.includes(String(userId))) {
-    logger.info(`we are addding ${userId} ${socket.user.id}`)
     await addParticipant(chatId, userId, redisClient);
     logger.info(`Added ${userId} to participants of chat ${chatId}`);
   }
@@ -121,7 +118,7 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
 
   const participants = await getParticipants(chat_id, redisClient);
 
-  if (!participants) {
+  if (participants.length <= 0) {
     logger.info("THIS CHAT HAS NO PARTICIPANTS SET IN REDIS");
     return;
   }
