@@ -48,7 +48,6 @@ export async function handleSocialConnect(socket, userId, chats, redisClient) {
   };
 
   socket.join(chats);
-  logger.debug(`DENIS MGYA`);
 
   const MAX_MESSAGES = 50;
 
@@ -208,7 +207,7 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
       }
     }
   }
-
+  logger.debug(`WE HERE ${unreadCountsPayload}`)
   await updateUnreadCounts(unreadCountsPayload, chat_id, context);
 }
 
