@@ -8,9 +8,11 @@ export const getChatMessages = async (chatId, limit, client) => {
     return (await client.rPush(messageKey, JSON.stringify(message))) - 1; 
   };
   
-  export const getParticipants = async (chatId, client) => {
-    return client.lRange(`chat:${chatId}:participants`, 0, -1);
-  };
+export const getParticipants = async (chatId, client) => {
+  const participants = await client.lRange(`chat:${chatId}:participants`, 0, -1);
+  return participants.map(Number); 
+};
+
   
   export const addParticipant = async (chatId, userId, client) => {
     return client.rPush(`chat:${chatId}:participants`, String(userId));

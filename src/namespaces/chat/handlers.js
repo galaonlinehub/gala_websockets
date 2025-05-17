@@ -33,7 +33,7 @@ export async function handleJoinChat(socket, initialChat, redisClient) {
 
   const participants = await getParticipants(chatId, redisClient);
 
-  if (!participants.includes(String(userId))) {
+  if (!participants.includes(userId)) {
     await addParticipant(chatId, withUser, redisClient);
     logger.info(`Added ${userId} to participants of chat ${chatId}`);
   }
@@ -163,7 +163,7 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
   const unreadCountsPayload = [];
 
   for (const participantId of participants) {
-    if (participantId !== String(sender_id)) {
+    if (participantId !== sender_id) {
       const unreadCount = await incrementUnreadCount(
         participantId,
         chat_id,
@@ -211,7 +211,6 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
     }
   }
 
-  logger.info(`WE HERE ${unreadCountsPayload}`)
   await updateUnreadCounts(unreadCountsPayload, chat_id, context);
 }
 
