@@ -48,6 +48,7 @@ export async function handleSocialConnect(socket, userId, chats, redisClient) {
   };
 
   socket.join(chats);
+  logger.debug(`DENIS MGYA`)
 
   const MAX_MESSAGES = 50;
 
