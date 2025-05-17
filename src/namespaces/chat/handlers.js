@@ -18,9 +18,11 @@ import {
 } from "./helpers.js";
 
 export async function handleJoinChat(socket, chatId, redisClient) {
+  logger.info(`JOIN CHAT IS EMITTED RIGHT ${chatId} , ${socket}`)
+
   const userId = socket.user.id || socket.handshake.query.user_id;
-  logger.info(`${chatId} and ${socket}`);
-  if(!chatId){
+
+  if (!chatId) {
     logger.info("No chat Id has been provided");
     return;
   }
@@ -30,6 +32,9 @@ export async function handleJoinChat(socket, chatId, redisClient) {
   socket.to(chatId).emit("user_joined", { userId });
 
   const participants = await getParticipants(chatId, redisClient);
+
+  logger.info(`THESE ARE PARTICIPANTS ${participants}`);
+
   if (!participants.includes(String(userId))) {
     await addParticipant(chatId, userId, redisClient);
     logger.info(`Added ${userId} to participants of chat ${chatId}`);
@@ -114,7 +119,13 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
   const tempMessageId = Date.now();
 
   const participants = await getParticipants(chat_id, redisClient);
-  logger.info(`particaipants ${participants} ${Date.now()}`);
+
+  if (!participants) {
+    logger.info("THIS CHAT HAS NO PARTICIPANTS SET IN REDIS");
+    return;
+  }
+
+  logger.info(`particaipants ${participants} ${new Date().toISOString()}`);
 
   const message = {
     message_id: tempMessageId,
