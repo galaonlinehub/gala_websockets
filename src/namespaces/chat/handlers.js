@@ -26,12 +26,9 @@ export async function handleJoinChat(socket, chatId, redisClient) {
   }
 
   socket.join(chatId);
-
   socket.to(chatId).emit("user_joined", { userId });
 
   const participants = await getParticipants(chatId, redisClient);
-
-  logger.info(`THESE ARE PARTICIPANTS ${participants}`);
 
   if (!participants.includes(String(userId))) {
     await addParticipant(chatId, userId, redisClient);
@@ -119,7 +116,7 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
   const participants = await getParticipants(chat_id, redisClient);
 
   if (participants.length <= 0) {
-    logger.info("THIS CHAT HAS NO PARTICIPANTS SET IN REDIS");
+    logger.info("Chat has no participants");
     return;
   }
 

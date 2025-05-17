@@ -13,7 +13,7 @@ export const getChatMessages = async (chatId, limit, client) => {
   };
   
   export const addParticipant = async (chatId, userId, client) => {
-    return client.rPush(`chat:${chatId}:participants`, userId);
+    return client.rPush(`chat:${chatId}:participants`, String(userId));
   };
   
   export const markMessageDelivered = async (chatId, userId, messageId, client) => {
