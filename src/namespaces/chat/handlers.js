@@ -207,8 +207,9 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
       }
     }
   }
-  logger.debug(`WE HERE ${unreadCountsPayload}`)
-  // await updateUnreadCounts(unreadCountsPayload, chat_id, context);
+
+  logger.info(`WE HERE ${unreadCountsPayload}`)
+  await updateUnreadCounts(unreadCountsPayload, chat_id, context);
 }
 
 export async function handleMessageRead(socket, data, namespace, redisClient) {

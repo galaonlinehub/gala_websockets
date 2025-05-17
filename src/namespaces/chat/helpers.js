@@ -32,7 +32,7 @@ export const updateMessageStatus = async (
 };
 
 export const updateUnreadCounts = async (unreadCounts, chatId, context) => {
-  logger.debug(`Participants on unread ${unreadCounts}`)
+  logger.info(`Participants on unread ${unreadCounts}`)
   try {
     const client = makeAuthenticatedRequest(context.token, context.isDev);
     const result = await client.put(`/chat/${chatId}/unread-counts`, {
