@@ -161,6 +161,7 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
   }
 
   const unreadCountsPayload = [];
+  logger.info(`PARTICIPANTS ${participants}`)
 
   for (const participantId of participants) {
     if (participantId !== sender_id) {
