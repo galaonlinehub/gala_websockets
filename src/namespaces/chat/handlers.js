@@ -29,7 +29,6 @@ export async function handleJoinChat(socket, initialChat, redisClient) {
         .split(",")
         .map((p) => p.trim());
 
-
   const withUser = Array.from(
     new Set([...normalizedParticipants, String(userId)])
   );
@@ -44,8 +43,8 @@ export async function handleJoinChat(socket, initialChat, redisClient) {
   const participants = await getParticipants(chatId, redisClient);
 
   if (participants.length === 0) {
-    logger.info(`${withUser}, this is the with user data`)
-    logger.info(typeof withUser)
+    logger.info(withUser)
+    logger.info(Array.isArray(withUser))
     await addParticipant(chatId, withUser, redisClient);
   } else if (!participants.includes(String(userId))) {
     await addParticipant(chatId, userId, redisClient);
