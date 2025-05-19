@@ -9,7 +9,7 @@ export const storeMessage = async (chatId, message, client) => {
 
 export const getParticipants = async (chatId, client) => {
   const raw = await client.lRange(`chat:${chatId}:participants`, 0, -1);
-
+  console.log(raw, "this is raw")
   return raw
     .flatMap((p) => p.split(","))
     .map((p) => parseInt(p.trim(), 10))
