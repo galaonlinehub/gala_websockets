@@ -19,19 +19,16 @@ import {
 
 export async function handleJoinChat(socket, initialChat, redisClient) {
   const userId = socket.user.id || socket.handshake.query.user_id;
- 
+
   const { chatId, startParticipants } = initialChat;
 
-  logger.info(`type of  start participants ${startParticipants}`)
+  logger.info(`type of  start participants ${startParticipants}`);
   const normalizedParticipants = Array.isArray(startParticipants)
     ? startParticipants
     : String(startParticipants)
         .split(",")
         .map((p) => p.trim());
 
-  logger.info(
-    `THIS IS THE START PARTICIPANTS ${JSON.stringify(normalizedParticipants)}`
-  );
 
   const withUser = Array.from(
     new Set([...normalizedParticipants, String(userId)])
@@ -47,11 +44,11 @@ export async function handleJoinChat(socket, initialChat, redisClient) {
   const participants = await getParticipants(chatId, redisClient);
 
   if (participants.length === 0) {
+    logger.info(`${withUser}, this is the with user data`)
+    logger.info(typeof withUser)
     await addParticipant(chatId, withUser, redisClient);
-    logger.info(`Initialized participants: ${withUser.join(", ")}`);
   } else if (!participants.includes(String(userId))) {
     await addParticipant(chatId, userId, redisClient);
-    logger.info(`Added ${userId} to participants of chat ${chatId}`);
   }
 
   logger.debug(`User ${userId} joined chat ${chatId}`);
