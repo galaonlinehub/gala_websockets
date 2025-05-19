@@ -10,27 +10,24 @@ export const getChatMessages = async (chatId, limit, client) => {
   };
   
 export const getParticipants = async (chatId, client) => {
-  const participants = await client.lRange(`chat:${chatId}:participants`, 0, -1);
+  const raw = await client.lRange(`chat:${chatId}:participants`, 0, -1);
 
-  logger.info(`Raw participants from Redis: ${JSON.stringify(participants)} for chat ${chatId}`);
-
-  const parsed = participants
-    .map((p) => {
-      const parsedId = parseInt(p, 10);
-      return Number.isInteger(parsedId) ? parsedId : null;
-    })
-    .filter((id) => id !== null);
-
-  logger.info(`Parsed participants: ${JSON.stringify(parsed)}`);
-
-  return parsed;
+  return raw
+    .flatMap(p => p.split(","))        
+    .map(p => parseInt(p.trim(), 10))  
+    .filter(n => !isNaN(n));        
 };
 
 
-  
-  export const addParticipant = async (chatId, userId, client) => {
-    return client.rPush(`chat:${chatId}:participants`, String(userId));
-  };
+ 
+export const addParticipant = async (chatId, userOrUsers, client) => {
+  const values = Array.isArray(userOrUsers)
+    ? userOrUsers.map(String)
+    : [String(userOrUsers)];
+
+  return client.rPush(`chat:${chatId}:participants`, ...values);
+};
+
   
   export const markMessageDelivered = async (chatId, userId, messageId, client) => {
     const deliveredKey = `delivered:${chatId}:${userId}`;
