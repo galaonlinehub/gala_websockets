@@ -164,6 +164,8 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
 
   for (const participantId of participants) {
     if (participantId !== sender_id) {
+      logger.info("WE ARE HERE IN")
+      logger.info(participantId)
       const unreadCount = await incrementUnreadCount(
         participantId,
         chat_id,
@@ -181,6 +183,7 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
         unread_count: unreadCount,
       });
     }
+    logger.info(typeof participantId, typeof sender_id)
   }
 
   const payload = { ...message, deliveredUserIds };
