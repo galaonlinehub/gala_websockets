@@ -11,9 +11,21 @@ export const getChatMessages = async (chatId, limit, client) => {
   
 export const getParticipants = async (chatId, client) => {
   const participants = await client.lRange(`chat:${chatId}:participants`, 0, -1);
-  logger.info(`inside participants ${participants} ${chatId}`)
-  return participants.map(Number); 
+
+  logger.info(`Raw participants from Redis: ${JSON.stringify(participants)} for chat ${chatId}`);
+
+  const parsed = participants
+    .map((p) => {
+      const parsedId = parseInt(p, 10);
+      return Number.isInteger(parsedId) ? parsedId : null;
+    })
+    .filter((id) => id !== null);
+
+  logger.info(`Parsed participants: ${JSON.stringify(parsed)}`);
+
+  return parsed;
 };
+
 
   
   export const addParticipant = async (chatId, userId, client) => {
