@@ -20,9 +20,8 @@ export const addParticipant = async (chatId, userOrUsers, client) => {
   const values = Array.isArray(userOrUsers)
     ? userOrUsers.map(String)
     : [String(userOrUsers)];
-   console.log(values)
-   console.log(...values)
-  return client.rPush(`chat:${chatId}:participants`, ['9', '2', '100']);
+
+  return client.rPush(`chat:${chatId}:participants`, values);
 };
 
 export const markMessageDelivered = async (
