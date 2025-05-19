@@ -1,3 +1,4 @@
+import { logger } from "../../utils/logger";
 
 export const getChatMessages = async (chatId, limit, client) => {
     return client.lRange(`chat:${chatId}:messages`, -limit, -1);
@@ -10,6 +11,7 @@ export const getChatMessages = async (chatId, limit, client) => {
   
 export const getParticipants = async (chatId, client) => {
   const participants = await client.lRange(`chat:${chatId}:participants`, 0, -1);
+  logger.info(`inside participants ${participants} ${chatId}`)
   return participants.map(Number); 
 };
 

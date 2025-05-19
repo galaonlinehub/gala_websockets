@@ -118,7 +118,7 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
 
   const participants = await getParticipants(chat_id, redisClient);
 
-  if (participants.length <= 0) {
+  if (participants.length < 2) {
     logger.info("Chat has no participants");
     return;
   }
