@@ -24,7 +24,7 @@ export async function handleJoinChat(socket, initialChat, redisClient) {
 
   logger.info(`type of  start participants ${startParticipants}`);
   const normalizedParticipants = Array.isArray(startParticipants)
-    ? startParticipants
+    ? startParticipants.map(String)
     : String(startParticipants)
         .split(",")
         .map((p) => p.trim());
