@@ -19,11 +19,23 @@ import {
 
 export async function handleJoinChat(socket, initialChat, redisClient) {
   const userId = socket.user.id || socket.handshake.query.user_id;
-
+ 
   const { chatId, startParticipants } = initialChat;
-  logger.info(`THIS IS THE START PARTICIPANTS ${startParticipants}`)
-  const withUser = [...startParticipants, userId];
 
+  logger.info(`type of  start participants ${startParticipants}`)
+  const normalizedParticipants = Array.isArray(startParticipants)
+    ? startParticipants
+    : String(startParticipants)
+        .split(",")
+        .map((p) => p.trim());
+
+  logger.info(
+    `THIS IS THE START PARTICIPANTS ${JSON.stringify(normalizedParticipants)}`
+  );
+
+  const withUser = Array.from(
+    new Set([...normalizedParticipants, String(userId)])
+  );
   if (!chatId) {
     logger.info("No chat Id has been provided");
     return;
