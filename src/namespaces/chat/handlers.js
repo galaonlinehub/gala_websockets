@@ -21,6 +21,7 @@ export async function handleJoinChat(socket, initialChat, redisClient) {
   const userId = socket.user.id || socket.handshake.query.user_id;
 
   const { chatId, startParticipants } = initialChat;
+  logger.info(`THIS IS THE START PARTICIPANTS ${startParticipants}`)
   const withUser = [...startParticipants, userId];
 
   if (!chatId) {
