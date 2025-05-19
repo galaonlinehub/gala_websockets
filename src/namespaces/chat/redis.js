@@ -1,4 +1,4 @@
-import { logger } from "../../utils/logger";
+import { logger } from "../../utils/logger.js";
 
 export const getChatMessages = async (chatId, limit, client) => {
     return client.lRange(`chat:${chatId}:messages`, -limit, -1);
