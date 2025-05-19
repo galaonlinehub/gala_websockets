@@ -43,7 +43,7 @@ export async function handleJoinChat(socket, initialChat, redisClient) {
   const participants = await getParticipants(chatId, redisClient);
 
   if (participants.length === 0) {
-    logger.info(withUser)
+    console.log(withUser)
     logger.info(Array.isArray(withUser))
     await addParticipant(chatId, withUser, redisClient);
   } else if (!participants.includes(String(userId))) {
