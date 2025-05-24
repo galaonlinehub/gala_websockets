@@ -1,5 +1,4 @@
 import { makeAuthenticatedRequest } from "../../services/api.js";
-import { logger } from "../../utils/logger.js";
 
 const prepareMessageStatusUpdatePayload = (messages, user_id, status) => ({
   message_ids: messages.map((m) => m.message_id),
@@ -32,7 +31,6 @@ export const updateMessageStatus = async (
 };
 
 export const updateUnreadCounts = async (unreadCounts, chatId, context) => {
-  logger.info(`Participants on unread ${unreadCounts}`)
   try {
     const client = makeAuthenticatedRequest(context.token, context.isDev);
     const result = await client.put(`/chat/${chatId}/unread-counts`, {
