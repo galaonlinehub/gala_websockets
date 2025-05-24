@@ -47,7 +47,6 @@ export async function handleJoinChat(socket, initialChat, redisClient) {
     await addParticipant(chatId, userId, redisClient);
   }
 
-
   await redisClient.set(`user:${socket.id}:chat`, chatId);
 }
 
@@ -130,7 +129,6 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
     logger.info("Chat has no participants");
     return;
   }
-
 
   const message = {
     message_id: tempMessageId,
@@ -223,6 +221,10 @@ export async function handleSendMessage(socket, data, namespace, redisClient) {
 
 export async function handleMessageRead(socket, data, namespace, redisClient) {
   const { messages, user_id, chat_id } = data;
+  const context = {
+    token: socket.token,
+    isDev: socket.isDev,
+  };
 
   await markMessageRead(
     chat_id,
@@ -244,12 +246,8 @@ export async function handleMessageRead(socket, data, namespace, redisClient) {
     unread_count: 0,
   });
 
-  await updateMessageStatus(messages, user_id, "read", socket.token);
-  await updateUnreadCounts(
-    [{ user_id, unread_count: 0 }],
-    chat_id,
-    socket.token
-  );
+  await updateMessageStatus(messages, user_id, "read", context);
+  await updateUnreadCounts([{ user_id, unread_count: 0 }], chat_id, context);
 }
 
 export function handleTyping(socket, data, _namespace) {
@@ -270,7 +268,14 @@ export function handleStopTyping(socket, data, _namespace) {
 
 export async function handleDisconnect(socket, userId, namespace, redisClient) {
   const chatId = await redisClient.get(`user:${socket.id}:chat`);
+
+  const context = {
+    token: socket.token,
+    isDev: socket.isDev,
+  };
+
   console.log("USER IS LEAVING...");
+  
   if (chatId) {
     socket.to(chatId).emit("user_offline", {
       user_id: userId,
@@ -284,7 +289,7 @@ export async function handleDisconnect(socket, userId, namespace, redisClient) {
     device_info: socket.handshake.headers["user-agent"] || null,
   };
 
-  await updateUserStatus(userStatusData, socket.token);
+  await updateUserStatus(userStatusData, context);
 
   await redisClient.del(`user:${socket.id}:chat`);
 }
