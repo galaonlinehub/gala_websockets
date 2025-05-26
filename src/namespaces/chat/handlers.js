@@ -61,8 +61,9 @@ export async function handleSocialConnect(socket, userId, chats, redisClient) {
 
   const MAX_MESSAGES = 50;
 
+  socket.to(chats).emit("user_online", userId);
+  
   for (const chatId of chats) {
-    socket.to(chatId).emit("user_online", userId);
 
     const recentMessages = await getChatMessages(
       chatId,
