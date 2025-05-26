@@ -1,3 +1,5 @@
+import { config } from "../../config";
+
 export const getChatMessages = async (chatId, limit, client) => {
   return client.lRange(`chat:${chatId}:messages`, -limit, -1);
 };
@@ -9,7 +11,6 @@ export const storeMessage = async (chatId, message, client) => {
 
 export const getParticipants = async (chatId, client) => {
   const raw = await client.lRange(`chat:${chatId}:participants`, 0, -1);
-  console.log(raw, "this is raw")
   return raw
     .flatMap((p) => p.split(","))
     .map((p) => parseInt(p.trim(), 10))
@@ -21,7 +22,8 @@ export const addParticipant = async (chatId, userOrUsers, client) => {
     ? userOrUsers.map(String)
     : [String(userOrUsers)];
 
-  return client.rPush(`chat:${chatId}:participants`, values);
+  const key = config.redis.keys.participants(chatId);
+  return client.rPush(key, values);
 };
 
 export const markMessageDelivered = async (

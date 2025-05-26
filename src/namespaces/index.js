@@ -2,10 +2,11 @@ import { setupChatNamespace } from "./chat/index.js";
 import { subscribeToChannel } from "../services/redis.js";
 import { logger } from "../utils/logger.js";
 import { setupPaymentNamespace } from "./payment/index.js";
+import { config } from "../config/index.js";
 
-export function setupNamespaces(io, redisClient) {
-  const chatNamespace = setupChatNamespace(io, redisClient);
-  const paymentNamespace = setupPaymentNamespace(io, redisClient);
+export function setupNamespaces(io, redisClient, redisOps) {
+  const chatNamespace = setupChatNamespace(io, redisClient, redisOps);
+  const paymentNamespace = setupPaymentNamespace(io, redisClient, redisOps);
 
   setupRedisSubscriptions(redisClient, {
     payment: paymentNamespace,
@@ -21,7 +22,7 @@ export function setupNamespaces(io, redisClient) {
 }
 
 async function setupRedisSubscriptions(redisClient, namespaces) {
-  await subscribeToChannel("galaeducation_database_payments", (message) => {
+  await subscribeToChannel( config.redis.channels , (message) => {
     try {
       if (!message) {
         logger.warn("Received empty Redis message");
@@ -33,7 +34,7 @@ async function setupRedisSubscriptions(redisClient, namespaces) {
         parsedMessage = JSON.parse(message);
       } catch (parseErr) {
         logger.warn("Failed to parse Redis message as JSON:", message);
-        logger.error(`This is the error ${parseErr}`)
+        logger.error(`This is the error ${parseErr}`);
         return;
       }
 

@@ -47,7 +47,7 @@ export async function handleJoinChat(socket, initialChat, redisClient) {
     await addParticipant(chatId, userId, redisClient);
   }
 
-  await redisClient.set(`user:${socket.id}:chat`, chatId);
+  await redisClient.sAdd(`user:${userId}:chat`, chatId);
 }
 
 export async function handleSocialConnect(socket, userId, chats, redisClient) {
@@ -62,9 +62,8 @@ export async function handleSocialConnect(socket, userId, chats, redisClient) {
   const MAX_MESSAGES = 50;
 
   socket.to(chats).emit("user_online", userId);
-  
-  for (const chatId of chats) {
 
+  for (const chatId of chats) {
     const recentMessages = await getChatMessages(
       chatId,
       MAX_MESSAGES,
@@ -268,7 +267,7 @@ export function handleStopTyping(socket, data, _namespace) {
 }
 
 export async function handleDisconnect(socket, userId, namespace, redisClient) {
-  const chatId = await redisClient.get(`user:${socket.id}:chat`);
+  const chatId = await redisClient.sMembers(`user:${userId}:chat`);
 
   const context = {
     token: socket.token,
@@ -276,7 +275,7 @@ export async function handleDisconnect(socket, userId, namespace, redisClient) {
   };
 
   console.log("USER IS LEAVING...");
-  
+
   if (chatId) {
     socket.to(chatId).emit("user_offline", {
       user_id: userId,

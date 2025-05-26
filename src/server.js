@@ -1,11 +1,13 @@
-
 import https from "httpolyglot";
 import fs from "fs";
 import { createServer } from "http";
 import { config } from "./config/index.js";
 import { setupApp } from "./app.js";
 import { initSocketIO } from "./services/socketio.js";
-import { initRedisClient } from "./services/redis.js";
+import {
+  initializeRedisOperations,
+  initRedisClient,
+} from "./services/redis.js";
 import { setupNamespaces } from "./namespaces/index.js";
 import { logger } from "./utils/logger.js";
 
@@ -14,6 +16,13 @@ async function startServer() {
   logger.info(`Environment: ${config.env}`);
   try {
     const redisClient = await initRedisClient();
+    const redisOps = initializeRedisOperations(redisClient);
+
+    if (!redisOps) {
+      logger.error("Failed to initialize Redis operations.");
+      process.exit(1);
+    }
+
     const app = setupApp();
 
     let server;
@@ -31,7 +40,7 @@ async function startServer() {
 
     const io = initSocketIO(server);
 
-    setupNamespaces(io, redisClient);
+    setupNamespaces(io, redisClient, redisOps);
     const PORT = config.port || 3000;
     server.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);

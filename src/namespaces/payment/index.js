@@ -2,10 +2,10 @@
 import { logger } from "../../utils/logger.js";
 import { paymentSocket } from "./socket.js";
 
-export function setupPaymentNamespace(io, redisClient) {
+export function setupPaymentNamespace(io, redisClient, redisOps) {
   // const paymentNamespace = authenticateNamespace(io.of("/payment"));
   const paymentNamespace = io.of("/payment");
-  paymentSocket(paymentNamespace, redisClient);
+  paymentSocket(paymentNamespace, redisClient, redisOps);
 
   logger.info("Payment namespace initialized");
 

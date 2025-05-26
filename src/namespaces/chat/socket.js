@@ -8,8 +8,16 @@ import {
   handleDisconnect,
   handleStopTyping,
 } from "./handlers.js";
+import { initializeRedisOperations } from "./redis.js";
 
 export function chatSocket(namespace, redisClient) {
+  const redisOps = initializeRedisOperations(redisClient);
+
+  if(!namespace || !redisOps) {
+    logger.error("Chat Namespace or Redis Client is not initialized.");
+    return;
+  }
+
   namespace.on("connection", (socket) => {
     const userId = socket.user?.id || socket.handshake.query.user_id;
 
