@@ -17,8 +17,9 @@ export const emitSocketError = (socket, error, shouldDisconnect = false) => {
 
   socket.emit(EVENTS.ERROR, errorData);
 
-  pinnoLogger.error("Socket Error:", {
-    message: errorMessage,
+  pinnoLogger.error({
+    message: "Socket Error:",
+    error: errorMessage,
     details: errorDetails,
   });
 
@@ -26,4 +27,3 @@ export const emitSocketError = (socket, error, shouldDisconnect = false) => {
     socket.disconnect(true);
   }
 };
-

@@ -15,6 +15,7 @@ export const getParticipantsWithFallback = async ({
     pinnoLogger.info("Redis has no participants, falling back to API...");
 
     const apiParticipants = await getParticipantsApi(chatId, context);
+    pinnoLogger.debug(apiParticipants);
     participants = apiParticipants.map((p) => p.user_id).filter(Boolean);
 
     if (participants.length > 0) {
