@@ -1,4 +1,4 @@
-import { config } from "../../config";
+import { config } from "../../config/index.js";
 
 export const storeMessage = async (chatId, message, ops) => {
   const key = config.redis.keys.messages(chatId);

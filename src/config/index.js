@@ -1,6 +1,6 @@
-import { envConfig } from './env.js';
+import { envConfig } from './env/env.js';
 import { redisConfig } from './redis/redis.js';
-import { socketConfig } from './socketio.js';
+import { socketConfig } from './socket/socketio.js';
 
 export const config = {
   ...envConfig,

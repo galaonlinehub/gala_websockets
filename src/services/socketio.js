@@ -1,5 +1,5 @@
 import { Server } from "socket.io";
-import { socketConfig } from "../config/socketio.js";
+import { socketConfig } from "../config/socket/socketio.js";
 import { logger } from "../utils/logger.js";
 
 let io = null;

@@ -1,4 +1,4 @@
-import { envConfig } from "./env.js";
+import { envConfig } from "../env/env.js";
 
 export const socketConfig = {
   cors: {

@@ -2,12 +2,12 @@ import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
-import { logger } from "../utils/logger.js";
+import { logger } from "../../utils/logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const rootDir = path.resolve(__dirname, "../../");
+const rootDir = path.resolve(__dirname, "../../../");
 
 const env = process.env.NODE_ENV;
 

@@ -1,4 +1,4 @@
-import { getKeyType } from "./redis-keys";
+import { getKeyType } from "./redis-keys.js";
 
 export const RedisTTLs = {
   // Chat data (longer retention)

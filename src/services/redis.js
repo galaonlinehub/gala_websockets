@@ -2,6 +2,7 @@ import { createClient } from "@redis/client";
 import { config } from "../config/index.js";
 import { logger } from "../utils/logger.js";
 import { createRedisOperations } from "../config/redis/redis-operations.js";
+import pinnoLogger from "../utils/pinno-logger.js";
 
 let redisClient = null;
 let redisSubscriber = null;
@@ -11,9 +12,20 @@ export async function initRedisClient() {
 
   const host = config.redis.connection.host;
   const port = config.redis.connection.port;
-  const username = config.redis.connection.user;
+  const username = config.redis.connection.username;
   const password = config.redis.connection.password;
   const db = config.redis.connection.db;
+
+  if (!host || !port || !username) {
+    pinnoLogger.error({
+      message: "Invalid Redis config, aborting connection",
+      host,
+      port,
+      username,
+      db,
+    });
+    throw new Error("Redis config is incomplete or invalid");
+  }
 
   const redisUrl = `redis://${username}:${encodeURIComponent(
     password
@@ -23,6 +35,17 @@ export async function initRedisClient() {
 
   redisClient = createClient({
     url: redisUrl,
+    socket: {
+      reconnectStrategy: (retries) => {
+        if (retries > 3) {
+          pinnoLogger.error(
+            "Too many Redis retries, stopping reconnect attempts."
+          );
+          return new Error("Retry limit reached");
+        }
+        return 1000;
+      },
+    },
   });
 
   redisClient.on("error", (err) => {

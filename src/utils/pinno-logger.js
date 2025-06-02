@@ -2,9 +2,11 @@ import pino from "pino";
 import pretty from "pino-pretty";
 import { join } from "path";
 import fs from "fs";
-import { multistream } from "pino-multi-stream";
+import pinoMultiStream from "pino-multi-stream";
 
-// Ensure logs directory exists
+
+const { multistream } = pinoMultiStream;
+
 const logDir = join(process.cwd(), "logs");
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir);
@@ -12,7 +14,7 @@ if (!fs.existsSync(logDir)) {
 
 // Stream for rotating file logs (could integrate with external rotation tools)
 const streams = [
-  { stream: process.stdout }, // Console always on
+  { stream: process.stdout }, 
   { stream: fs.createWriteStream(join(logDir, "app.log"), { flags: "a" }) },
 ];
 
@@ -27,7 +29,7 @@ const prettyStream = pretty({
 const pinnoLogger = pino(
   {
     level: process.env.LOG_LEVEL || (isProd ? "info" : "debug"),
-    base: { pid: false }, // hide pid in logs
+    base: { pid: false }, 
     timestamp: () => `,"time":"${new Date().toISOString()}"`,
     serializers: {
       err: pino.stdSerializers.err,
