@@ -1,54 +1,55 @@
 import { config } from "../../config";
 
-export const getChatMessages = async (chatId, limit, client) => {
-  return client.lRange(`chat:${chatId}:messages`, -limit, -1);
+export const storeMessage = async (chatId, message, ops) => {
+  const key = config.redis.keys.messages(chatId);
+  const newLength = await ops.pushToListRight(key, JSON.stringify(message));
+  if (newLength === 0) {
+    throw new Error("Failed to store message in Redis");
+  }
+  return newLength - 1;
 };
 
-export const storeMessage = async (chatId, message, client) => {
-  const messageKey = `chat:${chatId}:messages`;
-  return (await client.rPush(messageKey, JSON.stringify(message))) - 1;
+export const updateMessageId = async (chat_id, messageIndex, message, ops) => {
+  const key = config.redis.keys.messages(chat_id);
+  return ops.setListItem(key, messageIndex, JSON.stringify(message));
 };
 
-export const getParticipants = async (chatId, client) => {
-  const raw = await client.lRange(`chat:${chatId}:participants`, 0, -1);
+export const getParticipants = async (chatId, ops) => {
+  const key = config.redis.keys.participants(chatId);
+  const raw = await ops.getListRange(key);
   return raw
     .flatMap((p) => p.split(","))
     .map((p) => parseInt(p.trim(), 10))
     .filter((n) => !isNaN(n));
 };
 
-export const addParticipant = async (chatId, userOrUsers, client) => {
+export const addParticipant = async (chatId, userOrUsers, ops) => {
   const values = Array.isArray(userOrUsers)
     ? userOrUsers.map(String)
     : [String(userOrUsers)];
 
   const key = config.redis.keys.participants(chatId);
-  return client.rPush(key, values);
+  return ops.pushToListRight(key, values);
 };
 
-export const markMessageDelivered = async (
-  chatId,
-  userId,
-  messageId,
-  client
-) => {
-  const deliveredKey = `delivered:${chatId}:${userId}`;
-  return client.sAdd(deliveredKey, String(messageId));
+export const markMessageDelivered = async (chatId, userId, messageId, ops) => {
+  const key = config.redis.keys.delivered(chatId, userId);
+  return ops.addToSet(key, String(messageId));
 };
 
-export const incrementUnreadCount = async (userId, chatId, client) => {
-  const unreadKey = `unread:${userId}:${chatId}`;
-  await client.incr(unreadKey);
-  return client.get(unreadKey);
+export const incrementUnreadCount = async (userId, chatId, ops) => {
+  const key = config.redis.keys.unread(userId, chatId);
+  await ops.incrementWithTTL(key);
+  return ops.getString(key);
 };
 
-export const resetUnreadCount = async (userId, chatId, client) => {
-  const unreadKey = `unread:${userId}:${chatId}`;
-  await client.set(unreadKey, 0);
+export const resetUnreadCount = async (userId, chatId, ops) => {
+  const key = config.redis.keys.unread(userId, chatId);
+  await ops.setString(key, 0);
   return 0;
 };
 
-export const markMessageRead = async (chatId, userId, messageIds, client) => {
-  const readKey = `read:${chatId}:${userId}`;
-  return client.sAdd(readKey, messageIds.map(String));
+export const markMessageRead = async (chatId, userId, messageIds, ops) => {
+  const key = config.redis.keys.read(chatId, userId);
+  return await ops.addToSet(key, messageIds.map(String));
 };

@@ -1,4 +1,6 @@
 import { logger } from "../../utils/logger.js";
+import { EVENTS } from "../../config/socket/events.js";
+import { ROOMS } from "../../config/socket/rooms.js";
 import {
   handleJoinChat,
   handleSocialConnect,
@@ -8,17 +10,14 @@ import {
   handleDisconnect,
   handleStopTyping,
 } from "./handlers.js";
-import { initializeRedisOperations } from "./redis.js";
 
-export function chatSocket(namespace, redisClient) {
-  const redisOps = initializeRedisOperations(redisClient);
-
-  if(!namespace || !redisOps) {
+export function chatSocket(namespace, redisClient, redisOps) {
+  if (!namespace || !redisOps) {
     logger.error("Chat Namespace or Redis Client is not initialized.");
     return;
   }
 
-  namespace.on("connection", (socket) => {
+  namespace.on(EVENTS.CONNECT, (socket) => {
     const userId = socket.user?.id || socket.handshake.query.user_id;
 
     if (!userId) {
@@ -28,30 +27,32 @@ export function chatSocket(namespace, redisClient) {
       return socket.disconnect();
     }
 
-    socket.join(`user:${userId}`);
+    socket.join(ROOMS.user(userId));
 
-    socket.on("join_chat", async (initialChat) =>
-      handleJoinChat(socket, initialChat, redisClient)
-    );
+    const mainContext = { socket, userId, redisClient, redisOps, namespace };
 
-    socket.on("social", async (userId, chats) =>
-      handleSocialConnect(socket, userId, chats, redisClient)
+    socket.on(EVENTS.CHAT_JOIN, async (initialChat) =>
+      handleJoinChat({ ...mainContext, initialChat })
     );
 
-    socket.on("send_message", async (data) =>
-      handleSendMessage(socket, data, namespace, redisClient)
-    );
-    socket.on("message_read", async (data) =>
-      handleMessageRead(socket, data, namespace, redisClient)
+    socket.on(EVENTS.SOCIAL, async (chats) =>
+      handleSocialConnect({ ...mainContext, chats })
     );
 
-    socket.on("typing", (data) => handleTyping(socket, data, namespace));
-    socket.on("stop_typing", (data) =>
-      handleStopTyping(socket, data, namespace)
+    socket.on(EVENTS.CHAT_MESSAGE_SEND, async (data) =>
+      handleSendMessage({ ...mainContext, data })
+    );
+    socket.on(EVENTS.CHAT_MESSAGE_READ, async (data) =>
+      handleMessageRead({ ...mainContext, data })
     );
 
-    socket.on("disconnect", () =>
-      handleDisconnect(socket, userId, namespace, redisClient)
+    socket.on(EVENTS.CHAT_TYPING, (data) =>
+      handleTyping({ ...mainContext, data })
     );
+    socket.on(EVENTS.CHAT_STOP_TYPING, (data) =>
+      handleStopTyping({ ...mainContext, data })
+    );
+
+    socket.on(EVENTS.DISCONNECT, () => handleDisconnect(mainContext));
   });
 }

@@ -9,10 +9,11 @@ export const RedisKeys = {
   typing: (chatId) => `typing:${chatId}`,
   stopTyping: (chatId) => `stop_typing:${chatId}`,
   activeUsers: (chatId) => `active:${chatId}`,
-
+  
   userStatus: (userId) => `user_status:${userId}`,
   userSessions: (userId) => `user:${userId}:sessions`,
   onlineUsers: () => `users:online`,
+  
 
   chatStatus: (chatId) => `chat_status:${chatId}`,
   chatMembers: (chatId) => `chat:${chatId}:members`,

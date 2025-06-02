@@ -1,4 +1,5 @@
 import { makeAuthenticatedRequest } from "../../services/api.js";
+import pinnoLogger from "../../utils/pinno-logger.js";
 
 const prepareMessageStatusUpdatePayload = (messages, user_id, status) => ({
   message_ids: messages.map((m) => m.message_id),
@@ -53,4 +54,23 @@ export const unreadCount = async (data, chat_id, context) => {
 export const updateUserStatus = async (data, context) => {
   const client = makeAuthenticatedRequest(context.token, context.isDev);
   return await client.post("/user-status", data);
+};
+
+export const getParticipantsApi = async (chatId, context) => {
+  try {
+    const client = makeAuthenticatedRequest(context.token, context.isDev);
+    const result = await client.get(`/chat/${chatId}/participants`);
+
+    if (
+      result?.data?.status === "success" &&
+      Array.isArray(result?.data?.data)
+    ) {
+      return result.data.data;
+    }
+
+    throw new Error("Invalid response format");
+  } catch (err) {
+    pinnoLogger.error("Failed to fetch participants from API:", err.message);
+    return [];
+  }
 };

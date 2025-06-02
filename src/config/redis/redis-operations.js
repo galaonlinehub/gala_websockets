@@ -35,6 +35,12 @@ export class RedisOperations {
     return await this.client.incrby(key, amount);
   }
 
+  async incrementWithTTL(key, amount = 1, ttl = undefined) {
+    const value = await this.client.incrby(key, amount);
+    await this._handleTTL(key, ttl);
+    return value;
+  }
+
   async decrement(key, amount = 1) {
     return await this.client.decrby(key, amount);
   }
@@ -61,6 +67,12 @@ export class RedisOperations {
   async pushToListRightWithTTL(key, ttl = undefined, ...values) {
     const result = await this.client.rPush(key, ...values);
     await this._handleTTL(key, ttl);
+    return result;
+  }
+
+  async setListItem(key, index, value) {
+    const result = await this.client.lSet(key, index, value);
+    await this._handleTTL(key);
     return result;
   }
 
@@ -215,7 +227,6 @@ export class RedisOperations {
     return await this.client.ttl(key);
   }
 }
-
 
 //Export
 export const createRedisOperations = (client) => {

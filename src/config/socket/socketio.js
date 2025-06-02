@@ -1,10 +1,9 @@
-
-import { envConfig } from './env.js';
+import { envConfig } from "./env.js";
 
 export const socketConfig = {
   cors: {
     origin: envConfig.corsOrigins,
-    methods: ['GET', 'POST'],
+    methods: ["GET", "POST"],
     credentials: true,
   },
   maxHttpBufferSize: 10e6,
