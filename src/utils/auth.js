@@ -17,5 +17,12 @@ export function extractAuthMetadata(socket) {
     host.includes("localhost") ||
     host.includes("edutz.galahub.org");
 
+    console.log("AUTH HEADERS:", headers);
+console.log("HOST:", host);
+console.log("ORIGIN:", origin);
+console.log("QUERY:", query);
+console.log("Computed isDev:", isDev);
+
+
   return { token, origin, host, isDev };
 }
