@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import {
   markMessageDelivered,
   storeMessage,
@@ -274,12 +274,16 @@ export async function handleDisconnect({
 
   const context = authContext(socket);
 
+  const last_seen = formatDistanceToNow(new Date().toISOString(), {
+    addSuffix: true,
+  });
+
   console.log("USER IS LEAVING...");
 
   if (chatId) {
     socket.to(chatId).emit(EVENTS.USER_OFFLINE, {
       user_id: userId,
-      last_active_at: new Date().toISOString(),
+      last_active_at: last_seen,
     });
   }
 
