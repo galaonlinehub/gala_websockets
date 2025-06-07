@@ -26,6 +26,7 @@ import { authContext } from "../../utils/auth.js";
 import { ROOMS } from "../../config/socket/rooms.js";
 import { deleteRedisKey } from "../../config/redis/redis.js";
 import { getParticipantsWithFallback } from "./repository.js";
+import pinnoLogger from "../../utils/pinno-logger.js";
 
 export async function handleJoinChat({ socket, userId, chatId, redisOps }) {
   try {
@@ -54,6 +55,7 @@ export async function handleJoinChat({ socket, userId, chatId, redisOps }) {
 }
 
 export async function handleSocialConnect({ socket, userId, chats, redisOps }) {
+  pinnoLogger({ chat: chats, msg: "THESE ARE CHATS" });
   try {
     if (!chats || chats.length === 0) return;
     const context = authContext(socket);
