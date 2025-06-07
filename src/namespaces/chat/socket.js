@@ -36,10 +36,9 @@ export function chatSocket(namespace, redisClient, redisOps) {
       handleJoinChat({ ...mainContext, initialChat })
     );
 
-    socket.on(EVENTS.SOCIAL, async (chats) => {
-      pinnoLogger.info({ chat: chats, us: "THIS IS US" });
-      handleSocialConnect({ ...mainContext, chats });
-    });
+    socket.on(EVENTS.SOCIAL, async (chats) =>
+      handleSocialConnect({ ...mainContext, chats })
+    );
 
     socket.on(EVENTS.CHAT_MESSAGE_SEND, async (data) =>
       handleSendMessage({ ...mainContext, data })
