@@ -20,6 +20,8 @@ export const EVENTS = {
   CHAT_SIDEBAR_STOP_TYPING: "sidebar_stop_typing",
   CHAT_SIDEBAR_TYPING: "sidebar_typing",
   CHAT_MESSAGE_ID_UPDATE: "message_id_updated",
+  CHAT_TYPING: "typing",
+  CHAT_STOP_TYPING: "stop_typing",
 
   // User events
   USER_TYPING: "user_typing",

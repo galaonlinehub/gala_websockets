@@ -10,7 +10,6 @@ import {
   handleDisconnect,
   handleStopTyping,
 } from "./handlers.js";
-import pinnoLogger from "../../utils/pinno-logger.js";
 
 export function chatSocket(namespace, redisClient, redisOps) {
   if (!namespace || !redisOps) {
