@@ -7,6 +7,9 @@ import { extractAuthMetadata } from "../utils/auth.js";
 export function authenticateSocket(socket, next) {
   const { token, isDev } = extractAuthMetadata(socket);
 
+  logger.info({token:token, isDev:isDev})
+  return;
+
   if (!isDev) {
     logger.info("Production mode detected, checking token");
   }
