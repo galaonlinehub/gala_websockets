@@ -1,28 +1,27 @@
 export const authContext = (s) => ({ token: s.token, isDev: s.isDev });
 
+
 export function extractAuthMetadata(socket) {
   const { handshake } = socket;
-  const { auth, headers = {}, query = {} } = handshake;
+  const { auth = {}, headers = {}, query = {} } = handshake;
 
-  const origin = headers.origin || '';
-  const host = headers.host || '';
+  const origin = headers.origin || "";
+  const host = headers.host || "";
+  const referer = headers.referer || "";
 
   const token =
-    auth?.token ||
-    headers.authorization?.replace("Bearer ", "") ||
+    auth.token ||
+    (headers.authorization
+      ? headers.authorization.replace(/^Bearer\s+/i, "")
+      : "") ||
     query.token;
 
+  const devIndicators = ["localhost", "edutz.galahub.org"];
   const isDev =
     query.mode === "development" ||
-    host.includes("localhost") ||
-    host.includes("edutz.galahub.org");
+    devIndicators.some(
+      (devStr) => origin.includes(devStr) || referer.includes(devStr)
+    );
 
-    console.log("AUTH HEADERS:", headers);
-console.log("HOST:", host);
-console.log("ORIGIN:", origin);
-console.log("QUERY:", query);
-console.log("Computed isDev:", isDev);
-
-
-  return { token, origin, host, isDev };
+  return { token, origin, host, referer, isDev };
 }
