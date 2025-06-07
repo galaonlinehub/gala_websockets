@@ -3,7 +3,6 @@ import { config } from "../config/index.js";
 import { logger } from "../utils/logger.js";
 import { makeAuthenticatedRequest } from "../services/api.js";
 import { extractAuthMetadata } from "../utils/auth.js";
-import pinnoLogger from "../utils/pinno-logger.js";
 
 export function authenticateSocket(socket, next) {
   const { token, isDev } = extractAuthMetadata(socket);
