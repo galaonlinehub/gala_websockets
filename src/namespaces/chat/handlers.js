@@ -55,7 +55,7 @@ export async function handleJoinChat({ socket, userId, chatId, redisOps }) {
 }
 
 export async function handleSocialConnect({ socket, userId, chats, redisOps }) {
-  pinnoLogger({ chat: chats, msg: "THESE ARE CHATS" });
+  pinnoLogger.info({ chat: chats, msg: "THESE ARE CHATS" });
   try {
     if (!chats || chats.length === 0) return;
     const context = authContext(socket);
