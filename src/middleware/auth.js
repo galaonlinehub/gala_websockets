@@ -2,16 +2,10 @@ import jwt from "jsonwebtoken";
 import { config } from "../config/index.js";
 import { logger } from "../utils/logger.js";
 import { makeAuthenticatedRequest } from "../services/api.js";
+import { extractAuthMetadata } from "../utils/auth.js";
 
 export function authenticateSocket(socket, next) {
-  const token =
-    socket.handshake.auth?.token ||
-    socket.handshake.headers?.authorization?.replace("Bearer ", "") ||
-    socket.handshake.query?.token;
-
-  const isDev =
-    socket.handshake.query?.mode === "development" ||
-    socket.handshake.headers?.host?.includes("localhost");
+  const { token, isDev } = extractAuthMetadata(socket);
 
   if (!isDev) {
     logger.info("Production mode detected, checking token");
