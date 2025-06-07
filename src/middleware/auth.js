@@ -8,8 +8,6 @@ import pinnoLogger from "../utils/pinno-logger.js";
 export function authenticateSocket(socket, next) {
   const { token, isDev } = extractAuthMetadata(socket);
 
-  pinnoLogger.info({ token: token, isDev: isDev });
-
   if (!isDev) {
     logger.info("Production mode detected, checking token");
   }
