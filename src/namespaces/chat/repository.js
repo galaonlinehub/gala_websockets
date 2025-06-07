@@ -15,10 +15,11 @@ export const getParticipantsWithFallback = async ({
     pinnoLogger.info("Redis has no participants, falling back to API...");
 
     const apiParticipants = await getParticipantsApi(chatId, context);
-    pinnoLogger.debug({ msg: "Charts", chats: apiParticipants });
+    pinnoLogger.info({ msg: "Charts in repo", chats: apiParticipants });
     participants = apiParticipants.map((p) => p.user_id).filter(Boolean);
 
     if (participants.length > 0) {
+      pinnoLogger.info("WE IN IN REDIS");
       await addParticipant(chatId, participants, redisOps);
     }
   }

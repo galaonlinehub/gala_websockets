@@ -65,10 +65,8 @@ export const getParticipantsApi = async (chatId, context) => {
       result?.data?.status === "success" &&
       Array.isArray(result?.data?.data)
     ) {
-      pinnoLogger.info({ result: result.data.data, msg: "THIS IS THE RESULT INSIDE" });
       return result.data.data;
     }
-
 
     throw new Error("Invalid response format");
   } catch (err) {
