@@ -36,13 +36,13 @@ export class RedisOperations {
   }
 
   async incrementWithTTL(key, amount = 1, ttl = undefined) {
-    const value = await this.client.incrby(key, amount);
+    const value = await this.client.incrBy(key, amount);
     await this._handleTTL(key, ttl);
     return value;
   }
 
   async decrement(key, amount = 1) {
-    return await this.client.decrby(key, amount);
+    return await this.client.decrBy(key, amount);
   }
 
   // =============== LIST OPERATIONS ===============

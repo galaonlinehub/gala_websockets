@@ -18,7 +18,6 @@ export const getParticipantsWithFallback = async ({
     participants = apiParticipants.filter(Boolean);
 
     if (participants.length > 0) {
-      pinnoLogger.info("WE IN IN REDIS");
       await addParticipant(chatId, participants, redisOps);
     }
   }
