@@ -10,6 +10,7 @@ import {
   handleDisconnect,
   handleStopTyping,
 } from "./handlers.js";
+import pinnoLogger from "../../utils/pinno-logger.js";
 
 export function chatSocket(namespace, redisClient, redisOps) {
   if (!namespace || !redisOps) {
@@ -35,9 +36,10 @@ export function chatSocket(namespace, redisClient, redisOps) {
       handleJoinChat({ ...mainContext, initialChat })
     );
 
-    socket.on(EVENTS.SOCIAL, async (chats) =>
-      handleSocialConnect({ ...mainContext, chats })
-    );
+    socket.on(EVENTS.SOCIAL, async (chats) => {
+      pinnoLogger.info({ msg: "chats", chats: chats });
+      handleSocialConnect({ ...mainContext, chats });
+    });
 
     socket.on(EVENTS.CHAT_MESSAGE_SEND, async (data) =>
       handleSendMessage({ ...mainContext, data })
