@@ -143,6 +143,12 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
       sent_at_iso: rawSentAt.toISOString(),
     });
 
+    namespace.to(chat_id).emit(EVENTS.CHAT_MESSAGE_STATUS_BATCH, {
+      message_ids: [tempMessageId],
+      // user_id: deliveredUserIds,
+      status: "",
+    });
+
     const sockets = await namespace.in(chat_id).fetchSockets();
     const onlineUserIds = sockets.map((s) => s.handshake.query.user_id);
     const deliveredUserIds = participants.filter(
