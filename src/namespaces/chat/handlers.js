@@ -26,7 +26,6 @@ import { authContext } from "../../utils/auth.js";
 import { ROOMS } from "../../config/socket/rooms.js";
 import { deleteRedisKey } from "../../config/redis/redis.js";
 import { getParticipantsWithFallback } from "./repository.js";
-import pinnoLogger from "../../utils/pinno-logger.js";
 
 export async function handleJoinChat({ socket, userId, chatId, redisOps }) {
   try {
@@ -55,7 +54,6 @@ export async function handleJoinChat({ socket, userId, chatId, redisOps }) {
 }
 
 export async function handleSocialConnect({ socket, userId, chats, redisOps }) {
-  pinnoLogger.info({ chat: chats, msg: "THESE ARE CHATS" });
   try {
     if (!chats || chats.length === 0) return;
     const context = authContext(socket);
@@ -64,7 +62,7 @@ export async function handleSocialConnect({ socket, userId, chats, redisOps }) {
     socket.to(chats).emit(EVENTS.USER_ONLINE, userId);
 
     for (const chatId of chats) {
-      const chatMessageKey = config.redis.keys.chatMessages(chatId);
+      const chatMessageKey = config.redis.keys.messages(chatId);
       const recentMessages = await redisOps.getListRange(
         chatMessageKey,
         -MAX_MESSAGES,
