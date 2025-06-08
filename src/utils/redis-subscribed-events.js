@@ -6,6 +6,8 @@ export const donationEvent = (n, m) => {
   try {
     const { room_name, message } = m;
 
+    console.log(m, room_name, message)
+
     if (!room_name || !message) {
       pinnoLogger.error("No room name or message", m);
       return;
