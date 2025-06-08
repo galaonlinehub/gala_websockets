@@ -3,6 +3,7 @@ import { subscribeToChannel } from "../services/redis.js";
 import { logger } from "../utils/logger.js";
 import { setupPaymentNamespace } from "./payment/index.js";
 import { config } from "../config/index.js";
+import { donationEvent, payments } from "../utils/redis-subscribed-events.js";
 
 export function setupNamespaces(io, redisClient, redisOps) {
   const chatNamespace = setupChatNamespace(io, redisClient, redisOps);
@@ -22,7 +23,7 @@ export function setupNamespaces(io, redisClient, redisOps) {
 }
 
 async function setupRedisSubscriptions(redisClient, namespaces) {
-  await subscribeToChannel( config.redis.channels , (message) => {
+  await subscribeToChannel(config.redis.channels, (message) => {
     try {
       if (!message) {
         logger.warn("Received empty Redis message");
@@ -48,20 +49,13 @@ async function setupRedisSubscriptions(redisClient, namespaces) {
         return;
       }
 
+      const paymentNamespace = namespaces.payment;
+      const data = parsedMessage.data;
+
       if (parsedMessage.event === "payments.event") {
-        const { clientEmail: email, message: paymentMessage } =
-          parsedMessage.data;
-
-        if (!email || !paymentMessage) {
-          logger.warn(
-            "Missing email or paymentMessage in Redis data:",
-            parsedMessage.data
-          );
-          return;
-        }
-
-        namespaces.payment.to(email).emit("paymentResponse", paymentMessage);
-        logger.info(`Payment event sent to ${email}`);
+        payments(paymentNamespace, data);
+      } else if (parsedMessage.event === "donations.event") {
+        donationEvent(paymentNamespace, data);
       }
     } catch (error) {
       logger.error("Error processing payment message:", error);

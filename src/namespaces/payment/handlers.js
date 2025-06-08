@@ -1,7 +1,9 @@
-export const handleEmailJoin = (s, { email }) => {
-  if (email) {
-    s.join(email);
+import pinnoLogger from "../../utils/pinno-logger.js";
+
+export const handleJoin = (s, { id }) => {
+  if (id) {
+    s.join(id);
   } else {
-    console.warn("No email provided in join event.");
+    pinnoLogger.warn("No email provided in join event.");
   }
 };

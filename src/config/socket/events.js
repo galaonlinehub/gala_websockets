@@ -35,6 +35,12 @@ export const EVENTS = {
   USER_STATUS_UPDATE: "user_status_update",
   USER_JOINED: "user_joined",
 
+  //Payment
+  PAYMENT_RESPONSE: "paymentResponse",
+
+  //Donation
+  DONATION: "donation",
+
   // Notification events
   NOTIFICATION_NEW: "notification_new",
   NOTIFICATION_READ: "notification_read",

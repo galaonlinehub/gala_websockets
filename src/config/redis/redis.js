@@ -20,7 +20,10 @@ export const redisConfig = {
   keys: RedisKeys,
   ttl: RedisTTLs,
   operations: RedisOperations,
-  channels: ["galaeducation_database_payments"],
+  channels: [
+    "galaeducation_database_payments",
+    "galaeducation_database_donations",
+  ],
 };
 
 export const deleteRedisKey = async (client, key) => {
