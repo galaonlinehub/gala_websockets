@@ -26,6 +26,7 @@ import { authContext } from "../../utils/auth.js";
 import { ROOMS } from "../../config/socket/rooms.js";
 import { deleteRedisKey } from "../../config/redis/redis.js";
 import { getParticipantsWithFallback } from "./repository.js";
+import pinnoLogger from "../../utils/pinno-logger.js";
 
 export async function handleJoinChat({ socket, userId, chatId, redisOps }) {
   try {
@@ -122,8 +123,8 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
     const formattedSentAt = format(rawSentAt, "HH:mm a").toLowerCase();
     const tempMessageId = Date.now();
     const participantObj = { chatId: chat_id, redisOps, context };
-
     const participants = await getParticipantsWithFallback(participantObj);
+
     if (!participants) return;
 
     const message = {
@@ -137,16 +138,14 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
 
     const messageIndex = await storeMessage(chat_id, message, redisOps);
 
+    socket.emit(EVENTS.CHAT_MESSAGE_SENT, {
+      message_id: tempMessageId,
+    });
+
     namespace.to(chat_id).emit(EVENTS.CHAT_NEW_MESSAGE, {
       ...message,
       sent_at: formattedSentAt,
       sent_at_iso: rawSentAt.toISOString(),
-    });
-
-    namespace.to(chat_id).emit(EVENTS.CHAT_MESSAGE_STATUS_BATCH, {
-      message_ids: [tempMessageId],
-      // user_id: deliveredUserIds,
-      status: "",
     });
 
     const sockets = await namespace.in(chat_id).fetchSockets();
@@ -164,6 +163,14 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
         message_ids: [tempMessageId],
         user_id: deliveredUserIds,
         status: MESSAGE_STATUSES.DELIVERED,
+      });
+
+      // Emit individual delivery confirmations to sender
+      deliveredUserIds.forEach((userId) => {
+        socket.emit(EVENTS.CHAT_MESSAGE_DELIVERED, {
+          message_id: tempMessageId,
+          user_id: userId,
+        });
       });
     }
 
@@ -194,30 +201,47 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
 
     const payload = { ...message, deliveredUserIds };
     const client = makeAuthenticatedRequest(context.token, context.isDev);
-    const result = await client.post("/chat/messages", payload);
 
-    if (result?.data?.id) {
-      const oldMessageId = String(tempMessageId);
-      const newMessageId = String(result.data.id);
-      message.message_id = result.data.id;
+    try {
+      const result = await client.post("/chat/messages", payload);
 
-      namespace.to(chat_id).emit(EVENTS.CHAT_MESSAGE_ID_UPDATE, {
-        old_id: oldMessageId,
-        new_id: newMessageId,
-      });
+      if (result?.data?.id) {
+        const oldMessageId = String(tempMessageId);
+        const newMessageId = String(result.data.id);
+        message.message_id = result.data.id;
 
-      await updateMessageId(chat_id, messageIndex, message, redisOps);
+        namespace.to(chat_id).emit(EVENTS.CHAT_MESSAGE_ID_UPDATE, {
+          old_id: oldMessageId,
+          new_id: newMessageId,
+        });
 
-      for (const id of deliveredUserIds) {
-        const key = config.redis.keys.delivered(chat_id, id);
-        if (await redisOps.removeFromSet(key, oldMessageId)) {
-          await redisOps.addToSet(key, newMessageId);
+        await updateMessageId(chat_id, messageIndex, message, redisOps);
+
+        for (const id of deliveredUserIds) {
+          const key = config.redis.keys.delivered(chat_id, id);
+          if (await redisOps.removeFromSet(key, oldMessageId)) {
+            await redisOps.addToSet(key, newMessageId);
+          }
         }
       }
+    } catch (dbError) {
+      pinnoLogger.error("Failed to save message to database:", dbError);
+
+      socket.emit(EVENTS.CHAT_MESSAGE_FAILED, {
+        message_id: tempMessageId,
+        error: "Failed to save message",
+      });
+
+      return;
     }
 
     await updateUnreadCounts(unreadCountsPayload, chat_id, context);
   } catch (e) {
+    socket.emit(EVENTS.CHAT_MESSAGE_FAILED, {
+      message_id: data.temp_id || Date.now(),
+      error: "Message sending failed",
+    });
+
     emitSocketError(socket, e);
   }
 }
