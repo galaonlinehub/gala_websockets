@@ -89,15 +89,15 @@ export async function subscribeToChannel(channels, callback) {
 
   const channelList = Array.isArray(channels) ? channels : [channels];
 
-  //  subscriber.on('message', (channelName, message) => {
-  //   callback(message, channelName);
+  for (const channel of channelList) {
+    await subscriber.subscribe(channel, (message) => {
+      callback(message, channel);
+    });
+  }
+
+  // await subscriber.subscribe(...channelList, (message) => {
+  //   callback(message);
   // });
-
-  // await subscriber.subscribe(...channels);
-
-  await subscriber.subscribe(...channelList, (message) => {
-    callback(message);
-  });
   logger.info(`Subscribed to Redis channel: ${channelList}`);
 }
 
