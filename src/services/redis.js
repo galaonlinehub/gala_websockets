@@ -87,12 +87,18 @@ export async function subscribeToChannel(channels, callback) {
     throw new Error("No channel specified for subscription");
   }
 
-  const channel = Array.isArray(channels) ? channels : [channels];
+  const channelList = Array.isArray(channels) ? channels : [channels];
 
-  await subscriber.subscribe(...channels, (message) => {
+  //  subscriber.on('message', (channelName, message) => {
+  //   callback(message, channelName);
+  // });
+
+  // await subscriber.subscribe(...channels);
+
+  await subscriber.subscribe(...channelList, (message) => {
     callback(message);
   });
-  logger.info(`Subscribed to Redis channel: ${channel}`);
+  logger.info(`Subscribed to Redis channel: ${channelList}`);
 }
 
 export const initializeRedisOperations = (redisClient) => {

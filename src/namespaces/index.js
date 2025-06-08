@@ -9,10 +9,7 @@ export function setupNamespaces(io, redisClient, redisOps) {
   const chatNamespace = setupChatNamespace(io, redisClient, redisOps);
   const paymentNamespace = setupPaymentNamespace(io, redisClient, redisOps);
 
-  setupRedisSubscriptions({
-    payment: paymentNamespace,
-    chat: chatNamespace,
-  });
+  setupRedisSubscriptions(paymentNamespace);
 
   logger.info("All namespaces initialized");
 
@@ -23,7 +20,6 @@ export function setupNamespaces(io, redisClient, redisOps) {
 }
 
 async function setupRedisSubscriptions(namespaces) {
-  console.log("THIS FUNCTION EXECUTES");
   await subscribeToChannel(config.redis.channels, (message) => {
     console.log(message, "THIS IS THE MESSAGE");
 
@@ -52,7 +48,7 @@ async function setupRedisSubscriptions(namespaces) {
         return;
       }
 
-      const paymentNamespace = namespaces.payment;
+      const paymentNamespace = namespaces;
       const data = parsedMessage.data;
 
       if (parsedMessage.event === "payments.event") {
