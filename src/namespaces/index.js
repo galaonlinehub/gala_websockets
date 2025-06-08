@@ -24,7 +24,8 @@ export function setupNamespaces(io, redisClient, redisOps) {
 }
 
 async function setupRedisSubscriptions(redisClient, namespaces) {
-  pinnoLogger.info("THIS IS US")
+  // pinnoLogger.info("THIS IS US")
+console.log("THIS IS US 3")
   await subscribeToChannel(config.redis.channels, (message) => {
 
     pinnoLogger.info(message);
