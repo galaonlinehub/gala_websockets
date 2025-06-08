@@ -4,13 +4,12 @@ import { logger } from "../utils/logger.js";
 import { setupPaymentNamespace } from "./payment/index.js";
 import { config } from "../config/index.js";
 import { donationEvent, payments } from "../utils/redis-subscribed-events.js";
-import pinnoLogger from "../utils/pinno-logger.js";
 
 export function setupNamespaces(io, redisClient, redisOps) {
   const chatNamespace = setupChatNamespace(io, redisClient, redisOps);
   const paymentNamespace = setupPaymentNamespace(io, redisClient, redisOps);
 
-  setupRedisSubscriptions(redisClient, {
+  setupRedisSubscriptions({
     payment: paymentNamespace,
     chat: chatNamespace,
   });
@@ -23,10 +22,11 @@ export function setupNamespaces(io, redisClient, redisOps) {
   };
 }
 
-async function setupRedisSubscriptions(redisClient, namespaces) {
+async function setupRedisSubscriptions(namespaces) {
+  console.log("THIS FUNCTION EXECUTES");
   await subscribeToChannel(config.redis.channels, (message) => {
-   console.log(message, "THIS IS THE MESSAGE")
-  
+    console.log(message, "THIS IS THE MESSAGE");
+
     try {
       if (!message) {
         logger.warn("Received empty Redis message");
