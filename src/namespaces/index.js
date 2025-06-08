@@ -25,9 +25,8 @@ export function setupNamespaces(io, redisClient, redisOps) {
 
 async function setupRedisSubscriptions(redisClient, namespaces) {
   await subscribeToChannel(config.redis.channels, (message) => {
-
-    pinnoLogger.debug(message);
-    pinnoLogger.debug("EXECUTED")
+   console.log(message, "THIS IS THE MESSAGE")
+  
     try {
       if (!message) {
         logger.warn("Received empty Redis message");
