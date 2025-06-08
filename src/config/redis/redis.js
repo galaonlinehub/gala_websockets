@@ -22,7 +22,7 @@ export const redisConfig = {
   operations: RedisOperations,
   channels: [
     "galaeducation_database_payments",
-    "galaeducation_database_donations",
+    "galaeducation_database_donations"
   ],
 };
 
