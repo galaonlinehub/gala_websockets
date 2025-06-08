@@ -21,7 +21,6 @@ export function setupNamespaces(io, redisClient, redisOps) {
 
 async function setupRedisSubscriptions(namespaces) {
   await subscribeToChannel(config.redis.channels, (message) => {
-    console.log(message, "THIS IS THE MESSAGE");
 
     try {
       if (!message) {

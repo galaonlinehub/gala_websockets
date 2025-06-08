@@ -4,14 +4,14 @@ import { emitSocketError } from "./socket-error.js";
 
 export const donationEvent = (n, m) => {
   try {
-    const { room_name, paymentMessage } = m;
+    const { room_name, message } = m;
 
-    if (!room_name || !paymentMessage) {
+    if (!room_name || !message) {
       pinnoLogger.error("No room name or message", m);
       return;
     }
 
-    n.to(room_name).emit(EVENTS.DONATION, paymentMessage);
+    n.to(room_name).emit(EVENTS.DONATION, message);
   } catch (e) {
     emitSocketError(n, e);
 
@@ -21,15 +21,15 @@ export const donationEvent = (n, m) => {
 
 export const payments = (n, m) => {
   try {
-    const { email, paymentMessage } = m;
+    const { clientEmail, message } = m;
 
-    if (!email || !paymentMessage) {
+    if (!clientEmail || !message) {
       pinnoLogger.warn("Missing email or paymentMessage in Redis data:", m);
       return;
     }
 
-    n.to(email).emit(EVENTS.PAYMENT_RESPONSE, paymentMessage);
-    pinnoLogger.info(`Payment event sent to ${email}`);
+    n.to(clientEmail).emit(EVENTS.PAYMENT_RESPONSE, message);
+    pinnoLogger.info(`Payment event sent to ${clientEmail}`);
   } catch (e) {
     emitSocketError(n, e);
 
