@@ -216,7 +216,7 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
       return;
     }
 
-    // await updateUnreadCounts(unreadCountsPayload, chat_id, context);
+    await updateUnreadCounts(unreadCountsPayload, chat_id, context);
   } catch (e) {
     socket.emit(EVENTS.CHAT_MESSAGE_FAILED, {
       message_id: data.temp_id || Date.now(),
@@ -251,7 +251,7 @@ export async function handleMessageRead({ socket, data, namespace, redisOps }) {
     unread_count: 0,
   });
 
-  await updateMessageStatus(messages, user_id, MESSAGE_STATUSES.READ, context);
+  await updateMessageStatus(messages, user_id, MESSAGE_RECEIPTS.READ, context);
   await updateUnreadCounts([{ user_id, unread_count: 0 }], chat_id, context);
 }
 
