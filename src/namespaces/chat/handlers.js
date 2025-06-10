@@ -153,6 +153,8 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
       });
     }
 
+    pinnoLogger.debug(deliveredUserIds, "users online")
+
     const unreadCountsPayload = [];
 
     for (const participantId of participants) {
