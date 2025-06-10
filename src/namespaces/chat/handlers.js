@@ -142,7 +142,7 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
       message_id: tempMessageId,
     });
 
-    namespace.to(chat_id).emit(EVENTS.CHAT_NEW_MESSAGE, {
+    socket.to(chat_id).emit(EVENTS.CHAT_NEW_MESSAGE, {
       ...message,
       sent_at: formattedSentAt,
       sent_at_iso: rawSentAt.toISOString(),

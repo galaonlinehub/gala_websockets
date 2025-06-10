@@ -5,6 +5,6 @@ export const handleJoin = (s, { id }) => {
     console.log("User joined",id);
     s.join(id);
   } else {
-    pinnoLogger.warn("No email provided in join event.");
+    pinnoLogger.warn("No id provided in join event.");
   }
 };
