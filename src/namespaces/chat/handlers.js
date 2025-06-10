@@ -1,4 +1,4 @@
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import {
   markMessageDelivered,
   storeMessage,
@@ -117,36 +117,42 @@ export async function handleSocialConnect({ socket, userId, chats, redisOps }) {
 
 export async function handleSendMessage({ socket, data, namespace, redisOps }) {
   try {
-    const { chat_id, content, type, sender_id } = data;
+    const { id, chat_id, sender_id } = data;
     const context = authContext(socket);
-    const rawSentAt = new Date();
-    const formattedSentAt = format(rawSentAt, "HH:mm a").toLowerCase();
-    const tempMessageId = Date.now();
+    // const rawSentAt = new Date();
+    // const formattedSentAt = format(rawSentAt, "HH:mm a").toLowerCase();
+    const tempMessageId = id;
     const participantObj = { chatId: chat_id, redisOps, context };
     const participants = await getParticipantsWithFallback(participantObj);
 
     if (!participants) return;
 
-    const message = {
-      message_id: tempMessageId,
-      chat_id,
-      sender_id,
-      content,
-      type: type || "text",
-      sent_at: rawSentAt.toISOString(),
-    };
+    const message = data;
+
+    // const message = {
+    //   message_id: tempMessageId,
+    //   chat_id,
+    //   sender_id,
+    //   content,
+    //   type: type || "text",
+    //   sent_at: rawSentAt.toISOString(),
+    // };
 
     const messageIndex = await storeMessage(chat_id, message, redisOps);
 
     socket.emit(EVENTS.CHAT_MESSAGE_SENT, {
-      message_id: tempMessageId,
+      id: tempMessageId,
     });
 
-    socket.to(chat_id).emit(EVENTS.CHAT_NEW_MESSAGE, {
-      ...message,
-      sent_at: formattedSentAt,
-      sent_at_iso: rawSentAt.toISOString(),
-    });
+    socket.to(chat_id).emit(
+      EVENTS.CHAT_NEW_MESSAGE,
+      message
+      //   {
+      //   ...message,
+      //   sent_at: formattedSentAt,
+      //   sent_at_iso: rawSentAt.toISOString(),
+      // }
+    );
 
     const sockets = await namespace.in(chat_id).fetchSockets();
     const onlineUserIds = sockets.map((s) => s.handshake.query.user_id);
@@ -168,7 +174,7 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
       // Emit individual delivery confirmations to sender
       deliveredUserIds.forEach((userId) => {
         socket.emit(EVENTS.CHAT_MESSAGE_DELIVERED, {
-          message_id: tempMessageId,
+          id: tempMessageId,
           user_id: userId,
         });
       });
@@ -193,7 +199,7 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
           .to(ROOMS.user(participantId))
           .emit(EVENTS.CHAT_SIDEBAR_NEW_MESSAGE, {
             chat_id,
-            message: { ...message, sent_at: formattedSentAt },
+            message,
             unread_count: unreadCount,
           });
       }
@@ -208,7 +214,7 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
       if (result?.data?.id) {
         const oldMessageId = String(tempMessageId);
         const newMessageId = String(result.data.id);
-        message.message_id = result.data.id;
+        message.id = result.data.id;
 
         namespace.to(chat_id).emit(EVENTS.CHAT_MESSAGE_ID_UPDATE, {
           old_id: oldMessageId,
@@ -228,7 +234,7 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
       pinnoLogger.error("Failed to save message to database:", dbError);
 
       socket.emit(EVENTS.CHAT_MESSAGE_FAILED, {
-        message_id: tempMessageId,
+        id: tempMessageId,
         error: "Failed to save message",
       });
 
