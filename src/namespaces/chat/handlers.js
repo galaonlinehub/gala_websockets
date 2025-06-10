@@ -146,6 +146,7 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
     }
 
     if (deliveredUserIds.length > 0) {
+      console.log("WE ARE IN HERE ")
       namespace.to(chat_id).emit(EVENTS.CHAT_MESSAGE_STATUS_BATCH, {
         message_id: [tempMessageId],
         user_ids: deliveredUserIds,
@@ -153,7 +154,7 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
       });
     }
 
-    pinnoLogger.debug(deliveredUserIds, "users online")
+    console.warn(deliveredUserIds, "users online")
 
     const unreadCountsPayload = [];
 
