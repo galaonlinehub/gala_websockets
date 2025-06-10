@@ -216,7 +216,7 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
       return;
     }
 
-    await updateUnreadCounts(unreadCountsPayload, chat_id, context);
+    // await updateUnreadCounts(unreadCountsPayload, chat_id, context);
   } catch (e) {
     socket.emit(EVENTS.CHAT_MESSAGE_FAILED, {
       message_id: data.temp_id || Date.now(),
