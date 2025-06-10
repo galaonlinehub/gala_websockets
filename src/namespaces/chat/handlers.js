@@ -19,6 +19,7 @@ import { emitSocketError } from "../../utils/socket-error.js";
 import { EVENTS } from "../../config/socket/events.js";
 import {
   MAX_MESSAGES,
+  MESSAGE_RECEIPTS,
   MESSAGE_STATUSES,
   USER_STATUSES,
 } from "../../config/env/variables.js";
@@ -119,8 +120,6 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
   try {
     const { id, chat_id, sender_id } = data;
     const context = authContext(socket);
-    // const rawSentAt = new Date();
-    // const formattedSentAt = format(rawSentAt, "HH:mm a").toLowerCase();
     const tempMessageId = id;
     const participantObj = { chatId: chat_id, redisOps, context };
     const participants = await getParticipantsWithFallback(participantObj);
@@ -128,31 +127,13 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
     if (!participants) return;
 
     const message = data;
-
-    // const message = {
-    //   message_id: tempMessageId,
-    //   chat_id,
-    //   sender_id,
-    //   content,
-    //   type: type || "text",
-    //   sent_at: rawSentAt.toISOString(),
-    // };
-
     const messageIndex = await storeMessage(chat_id, message, redisOps);
 
     socket.emit(EVENTS.CHAT_MESSAGE_SENT, {
       id: tempMessageId,
     });
 
-    socket.to(chat_id).emit(
-      EVENTS.CHAT_NEW_MESSAGE,
-      message
-      //   {
-      //   ...message,
-      //   sent_at: formattedSentAt,
-      //   sent_at_iso: rawSentAt.toISOString(),
-      // }
-    );
+    socket.to(chat_id).emit(EVENTS.CHAT_NEW_MESSAGE, message);
 
     const sockets = await namespace.in(chat_id).fetchSockets();
     const onlineUserIds = sockets.map((s) => s.handshake.query.user_id);
@@ -166,17 +147,9 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
 
     if (deliveredUserIds.length > 0) {
       namespace.to(chat_id).emit(EVENTS.CHAT_MESSAGE_STATUS_BATCH, {
-        message_ids: [tempMessageId],
-        user_id: deliveredUserIds,
-        status: MESSAGE_STATUSES.DELIVERED,
-      });
-
-      // Emit individual delivery confirmations to sender
-      deliveredUserIds.forEach((userId) => {
-        socket.emit(EVENTS.CHAT_MESSAGE_DELIVERED, {
-          id: tempMessageId,
-          user_id: userId,
-        });
+        message_id: [tempMessageId],
+        user_ids: deliveredUserIds,
+        status: MESSAGE_RECEIPTS.DELIVERED,
       });
     }
 

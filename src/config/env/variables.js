@@ -1,9 +1,14 @@
 export const MAX_MESSAGES = 50;
 
-export const MESSAGE_STATUSES = {
-  SENT: "sent",
+export const MESSAGE_RECEIPTS = {
   DELIVERED: "delivered",
   READ: "read",
+};
+
+export const MESSAGE_STATUSES = {
+  SENDING: "sending",
+  SENT: "sent",
+  FAILED: "failed",
 };
 
 export const MESSAGE_TYPES = {
@@ -86,7 +91,6 @@ export const MESSAGE_THREADING = {
 };
 
 //USER
-
 export const USER_STATUSES = {
   ONLINE: "online",
   OFFLINE: "offline",
