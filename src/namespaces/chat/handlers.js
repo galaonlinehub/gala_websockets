@@ -35,7 +35,7 @@ export async function handleJoinChat({ socket, userId, chatId, redisOps }) {
       logger.info("No chat Id has been provided");
       return;
     }
-
+    
     socket.join(chatId);
     socket.to(chatId).emit(EVENTS.USER_JOINED, { userId });
 
@@ -59,8 +59,9 @@ export async function handleSocialConnect({ socket, userId, chats, redisOps }) {
   try {
     if (!chats || chats.length === 0) return;
     const context = authContext(socket);
+    console.log(userId, "This is user id");
+    console.log(chats, "List of chats");
     socket.join(chats);
-
     socket.to(chats).emit(EVENTS.USER_ONLINE, userId);
 
     for (const chatId of chats) {
@@ -147,7 +148,6 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
     }
 
     if (deliveredUserIds.length > 0) {
-      console.log("WE ARE IN HERE ")
       namespace.to(chat_id).emit(EVENTS.CHAT_MESSAGE_STATUS_BATCH, {
         message_id: [tempMessageId],
         user_ids: deliveredUserIds,
