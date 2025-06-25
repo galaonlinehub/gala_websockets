@@ -132,7 +132,8 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
     socket.emit(EVENTS.CHAT_MESSAGE_SENT, {
       id: tempMessageId,
     });
-
+    pinnoLogger.info(data, "THIS IS DATA");
+    pinnoLogger.info(chat_id,"THIS IS CHAT ID" )
     socket.to(chat_id).emit(EVENTS.CHAT_NEW_MESSAGE, message);
 
     const sockets = await namespace.in(chat_id).fetchSockets();
