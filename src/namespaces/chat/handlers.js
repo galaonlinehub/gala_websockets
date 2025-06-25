@@ -135,6 +135,7 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
     });
  
     console.log(chat_id, 'this ischat')
+    logAllRoomsAndUsers(namespace)
     socket.to(chat_id).emit(EVENTS.CHAT_NEW_MESSAGE, message);
 
     const sockets = await namespace.in(chat_id).fetchSockets();
@@ -228,6 +229,28 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
     emitSocketError(socket, e);
   }
 }
+
+export async function logAllRoomsAndUsers(namespace) {
+  const rooms = namespace.adapter.rooms; // Map of roomName -> Set(socketIds)
+  const sids = namespace.adapter.sids;   // Map of socketId -> Set(roomNames)
+
+  for (const [roomName, socketIds] of rooms) {
+    // ⚠️ Skip private rooms (those that are the same as socket IDs)
+    if (sids.has(roomName)) continue;
+
+    const sockets = await namespace.in(roomName).fetchSockets();
+
+    console.log(`Room: ${roomName} | ${sockets.length} member(s)`);
+
+    sockets.forEach((socket, index) => {
+      const userId = socket.user?.id ?? "unknown";
+      console.log(`  #${index + 1} User ID: ${userId}, Socket ID: ${socket.id}`);
+    });
+
+    console.log("—".repeat(40));
+  }
+}
+
 
 export async function handleMessageRead({ socket, data, namespace, redisOps }) {
   const { messages, user_id, chat_id } = data;
