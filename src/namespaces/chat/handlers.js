@@ -235,7 +235,6 @@ export async function logAllRoomsAndUsers(namespace) {
   const sids = namespace.adapter.sids;   // Map of socketId -> Set(roomNames)
 
   for (const [roomName, socketIds] of rooms) {
-    // ⚠️ Skip private rooms (those that are the same as socket IDs)
     if (sids.has(roomName)) continue;
 
     const sockets = await namespace.in(roomName).fetchSockets();

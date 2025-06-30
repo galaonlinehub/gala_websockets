@@ -28,7 +28,7 @@ export function authenticateSocket(socket, next) {
         "Headers: " + JSON.stringify(client.defaults.headers.common, null, 2)
       );
 
-      const response = await client.get("user");
+      const response = await client.get("user/mini-details");
 
       if (response.status !== 200) {
         const message =
