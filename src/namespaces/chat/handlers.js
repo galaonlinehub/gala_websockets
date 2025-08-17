@@ -35,7 +35,7 @@ export async function handleJoinChat({ socket, userId, chatId, redisOps }) {
       logger.info("No chat Id has been provided");
       return;
     }
-    
+
     socket.join(chatId);
     socket.to(chatId).emit(EVENTS.USER_JOINED, { userId });
 
@@ -133,10 +133,12 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
     socket.emit(EVENTS.CHAT_MESSAGE_SENT, {
       id: tempMessageId,
     });
- 
-    console.log(chat_id, 'this ischat')
-    logAllRoomsAndUsers(namespace)
-    socket.to(chat_id).emit(EVENTS.CHAT_NEW_MESSAGE, message);
+
+    console.log(chat_id, "this ischat");
+    logAllRoomsAndUsers(namespace);
+    socket
+      .to(chat_id)
+      .emit(EVENTS.CHAT_NEW_MESSAGE, { message, sender: socket?.user });
 
     const sockets = await namespace.in(chat_id).fetchSockets();
     const onlineUserIds = sockets.map((s) => s.handshake.query.user_id);
@@ -156,7 +158,7 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
       });
     }
 
-    console.warn(deliveredUserIds, "users online")
+    console.warn(deliveredUserIds, "users online");
 
     const unreadCountsPayload = [];
 
@@ -232,7 +234,7 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
 
 export async function logAllRoomsAndUsers(namespace) {
   const rooms = namespace.adapter.rooms; // Map of roomName -> Set(socketIds)
-  const sids = namespace.adapter.sids;   // Map of socketId -> Set(roomNames)
+  const sids = namespace.adapter.sids; // Map of socketId -> Set(roomNames)
 
   for (const [roomName, socketIds] of rooms) {
     if (sids.has(roomName)) continue;
@@ -243,13 +245,14 @@ export async function logAllRoomsAndUsers(namespace) {
 
     sockets.forEach((socket, index) => {
       const userId = socket.user?.id ?? "unknown";
-      console.log(`  #${index + 1} User ID: ${userId}, Socket ID: ${socket.id}`);
+      console.log(
+        `  #${index + 1} User ID: ${userId}, Socket ID: ${socket.id}`
+      );
     });
 
     console.log("—".repeat(40));
   }
 }
-
 
 export async function handleMessageRead({ socket, data, namespace, redisOps }) {
   const { messages, user_id, chat_id } = data;

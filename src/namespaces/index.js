@@ -28,6 +28,8 @@ async function setupRedisSubscriptions(namespaces) {
         return;
       }
 
+      logger.debug("THIS IS THE MESSAGE", message);
+
       let parsedMessage;
       try {
         parsedMessage = JSON.parse(message);
