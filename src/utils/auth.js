@@ -1,6 +1,5 @@
 export const authContext = (s) => ({ token: s.token, isDev: s.isDev });
 
-
 export function extractAuthMetadata(socket) {
   const { handshake } = socket;
   const { auth = {}, headers = {}, query = {} } = handshake;
@@ -16,7 +15,7 @@ export function extractAuthMetadata(socket) {
       : "") ||
     query.token;
 
-  const devIndicators = ["localhost", "edutz.galahub.org"];
+  const devIndicators = ["localhost", "edutz.galahub.tz"];
   const isDev =
     query.mode === "development" ||
     devIndicators.some(
