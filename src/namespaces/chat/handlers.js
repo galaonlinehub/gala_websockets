@@ -236,7 +236,7 @@ export async function logAllRoomsAndUsers(namespace) {
   const rooms = namespace.adapter.rooms; // Map of roomName -> Set(socketIds)
   const sids = namespace.adapter.sids; // Map of socketId -> Set(roomNames)
 
-  for (const [roomName, socketIds] of rooms) {
+  for (const [roomName, _socketIds] of rooms) {
     if (sids.has(roomName)) continue;
 
     const sockets = await namespace.in(roomName).fetchSockets();
