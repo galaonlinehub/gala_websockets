@@ -2,12 +2,14 @@ import { setupChatNamespace } from "./chat/index.js";
 import { subscribeToChannel } from "../services/redis.js";
 import { logger } from "../utils/logger.js";
 import { setupPaymentNamespace } from "./payment/index.js";
+import { setupNotificationsNamespace } from "./notifications/index.js";
 import { config } from "../config/index.js";
 import { donationEvent, payments } from "../utils/redis-subscribed-events.js";
 
 export function setupNamespaces(io, redisClient, redisOps) {
   const chatNamespace = setupChatNamespace(io, redisClient, redisOps);
   const paymentNamespace = setupPaymentNamespace(io, redisClient, redisOps);
+  const notificationsNamespace = setupNotificationsNamespace(io, redisClient, redisOps);
 
   setupRedisSubscriptions(paymentNamespace);
 
@@ -16,6 +18,7 @@ export function setupNamespaces(io, redisClient, redisOps) {
   return {
     chat: chatNamespace,
     payment: paymentNamespace,
+    notifications: notificationsNamespace,
   };
 }
 
