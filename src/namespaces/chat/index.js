@@ -3,11 +3,25 @@ import { logger } from "../../utils/logger.js";
 import { chatSocket } from "./socket.js";
 
 export function setupChatNamespace(io, redisClient, redisOps) {
-  const chatNamespace = authenticateNamespace(io.of("/chat"));
+  try {
+    const chatNamespace = io.of("/chat");
 
-  chatSocket(chatNamespace, redisClient, redisOps);
+    // Apply authentication middleware
+    authenticateNamespace(chatNamespace);
 
-  logger.info("Chat namespace initialized");
+    // Set up socket handlers
+    chatSocket(chatNamespace, redisClient, redisOps);
 
-  return chatNamespace;
+    // Add error handling for the namespace
+    chatNamespace.on("connect_error", (err) => {
+      logger.error(`Chat namespace connection error: ${err.message}`, err);
+    });
+
+    logger.info("Chat namespace initialized");
+
+    return chatNamespace;
+  } catch (error) {
+    logger.error("Failed to setup chat namespace:", error);
+    throw error;
+  }
 }

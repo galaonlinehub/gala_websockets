@@ -3,11 +3,25 @@ import { logger } from "../../utils/logger.js";
 import { notificationSocket } from "./socket.js";
 
 export function setupNotificationsNamespace(io, redisClient, redisOps) {
-  const notificationsNamespace = authenticateNamespace(io.of("/notifications"));
+  try {
+    const notificationsNamespace = io.of("/notifications");
 
-  notificationSocket(notificationsNamespace, redisClient, redisOps);
+    // Apply authentication middleware
+    authenticateNamespace(notificationsNamespace);
 
-  logger.info("Notifications namespace initialized");
+    // Set up socket handlers
+    notificationSocket(notificationsNamespace, redisClient, redisOps);
 
-  return notificationsNamespace;
+    // Add error handling for the namespace
+    notificationsNamespace.on("connect_error", (err) => {
+      logger.error(`Notifications namespace connection error: ${err.message}`, err);
+    });
+
+    logger.info("Notifications namespace initialized");
+
+    return notificationsNamespace;
+  } catch (error) {
+    logger.error("Failed to setup notifications namespace:", error);
+    throw error;
+  }
 }

@@ -7,19 +7,35 @@ import { config } from "../config/index.js";
 import { donationEvent, payments } from "../utils/redis-subscribed-events.js";
 
 export function setupNamespaces(io, redisClient, redisOps) {
-  const chatNamespace = setupChatNamespace(io, redisClient, redisOps);
-  const paymentNamespace = setupPaymentNamespace(io, redisClient, redisOps);
-  const notificationsNamespace = setupNotificationsNamespace(io, redisClient, redisOps);
+  try {
+    logger.info("Setting up namespaces...");
 
-  setupRedisSubscriptions(paymentNamespace);
+    const chatNamespace = setupChatNamespace(io, redisClient, redisOps);
+    logger.info("Chat namespace setup complete");
 
-  logger.info("All namespaces initialized");
+    const paymentNamespace = setupPaymentNamespace(io, redisClient, redisOps);
+    logger.info("Payment namespace setup complete");
 
-  return {
-    chat: chatNamespace,
-    payment: paymentNamespace,
-    notifications: notificationsNamespace,
-  };
+    const notificationsNamespace = setupNotificationsNamespace(io, redisClient, redisOps);
+    logger.info("Notifications namespace setup complete");
+
+    // Verify namespaces are registered
+    const registeredNamespaces = Array.from(io._nsps.keys());
+    logger.info(`Registered namespaces: ${registeredNamespaces.join(", ")}`);
+
+    setupRedisSubscriptions(paymentNamespace);
+
+    logger.info("All namespaces initialized successfully");
+
+    return {
+      chat: chatNamespace,
+      payment: paymentNamespace,
+      notifications: notificationsNamespace,
+    };
+  } catch (error) {
+    logger.error("Failed to setup namespaces:", error);
+    throw error;
+  }
 }
 
 async function setupRedisSubscriptions(namespaces) {
