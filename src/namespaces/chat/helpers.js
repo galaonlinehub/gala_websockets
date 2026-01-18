@@ -11,13 +11,13 @@ export const updateMessageStatus = async (
   messages,
   user_id,
   status,
-  context
+  context,
 ) => {
   try {
     const payload = prepareMessageStatusUpdatePayload(
       messages,
       user_id,
-      status
+      status,
     );
     const client = makeAuthenticatedRequest(context.token, context.isDev);
     const data = await client.post("/message/status", payload);
@@ -25,7 +25,7 @@ export const updateMessageStatus = async (
   } catch (error) {
     console.error(
       `Failed to update message status to "${status}":`,
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     return null;
   }
@@ -61,16 +61,20 @@ export const getParticipantsApi = async (chatId, context) => {
     const client = makeAuthenticatedRequest(context.token, context.isDev);
     const result = await client.get(`/chat/${chatId}/participants`);
 
-    if (
-      result?.data?.status === "success" &&
-      Array.isArray(result?.data?.data)
-    ) {
+    const isSuccess =
+      result?.data?.status?.toLowerCase() === "success" ||
+      result?.data?.message?.toLowerCase() === "success";
+
+    if (isSuccess && Array.isArray(result?.data?.data)) {
       return result.data.data;
     }
 
     throw new Error("Invalid response format");
   } catch (err) {
-    pinnoLogger.error("Failed to fetch participants from API:", err.message);
+    pinnoLogger.error({
+      msg: "Failed to fetch participants from API:",
+      err: err.message,
+    });
     return [];
   }
 };

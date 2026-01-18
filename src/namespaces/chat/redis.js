@@ -19,8 +19,8 @@ export const getParticipants = async (chatId, ops) => {
   const raw = await ops.getListRange(key);
   return raw
     .flatMap((p) => p.split(","))
-    .map((p) => parseInt(p.trim(), 10))
-    .filter((n) => !isNaN(n));
+    .map((p) => p.trim())
+    .filter(Boolean);
 };
 
 export const addParticipant = async (chatId, userOrUsers, ops) => {
@@ -40,7 +40,7 @@ export const markMessageDelivered = async (chatId, userId, messageId, ops) => {
 export const incrementUnreadCount = async (userId, chatId, ops) => {
   const key = config.redis.keys.unread(userId, chatId);
   await ops.incrementWithTTL(key);
-  return ops.getString(key);
+  return Number(await ops.getString(key));
 };
 
 export const resetUnreadCount = async (userId, chatId, ops) => {

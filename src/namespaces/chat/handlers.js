@@ -1,33 +1,33 @@
 import { formatDistanceToNow } from "date-fns";
 import {
-  markMessageDelivered,
-  storeMessage,
-  incrementUnreadCount,
-  resetUnreadCount,
-  markMessageRead,
-  updateMessageId,
-} from "./redis.js";
-import { makeAuthenticatedRequest } from "../../services/api.js";
-import { logger } from "../../utils/logger.js";
-import {
-  updateMessageStatus,
-  updateUserStatus,
-  updateUnreadCounts,
-} from "./helpers.js";
-import { config } from "../../config/index.js";
-import { emitSocketError } from "../../utils/socket-error.js";
-import { EVENTS } from "../../config/socket/events.js";
-import {
   MAX_MESSAGES,
   MESSAGE_RECEIPTS,
   MESSAGE_STATUSES,
   USER_STATUSES,
 } from "../../config/env/variables.js";
-import { authContext } from "../../utils/auth.js";
-import { ROOMS } from "../../config/socket/rooms.js";
+import { config } from "../../config/index.js";
 import { deleteRedisKey } from "../../config/redis/redis.js";
-import { getParticipantsWithFallback } from "./repository.js";
+import { EVENTS } from "../../config/socket/events.js";
+import { ROOMS } from "../../config/socket/rooms.js";
+import { makeAuthenticatedRequest } from "../../services/api.js";
+import { authContext } from "../../utils/auth.js";
+import { logger } from "../../utils/logger.js";
 import pinnoLogger from "../../utils/pinno-logger.js";
+import { emitSocketError } from "../../utils/socket-error.js";
+import {
+  updateMessageStatus,
+  updateUnreadCounts,
+  updateUserStatus,
+} from "./helpers.js";
+import {
+  incrementUnreadCount,
+  markMessageDelivered,
+  markMessageRead,
+  resetUnreadCount,
+  storeMessage,
+  updateMessageId,
+} from "./redis.js";
+import { getParticipantsWithFallback } from "./repository.js";
 
 export async function handleJoinChat({ socket, userId, chatId, redisOps }) {
   try {
@@ -40,7 +40,7 @@ export async function handleJoinChat({ socket, userId, chatId, redisOps }) {
     socket.to(chatId).emit(EVENTS.USER_JOINED, { userId });
 
     const context = authContext(socket);
-    const participantObj = { chatId, redisOps, context };
+    const participantObj = { chatId, redisOps, context, socket };
 
     const participants = await getParticipantsWithFallback(participantObj);
     if (!participants) return;
@@ -69,7 +69,7 @@ export async function handleSocialConnect({ socket, userId, chats, redisOps }) {
       const recentMessages = await redisOps.getListRange(
         chatMessageKey,
         -MAX_MESSAGES,
-        -1
+        -1,
       );
       const deliveredKey = config.redis.keys.delivered(chatId, userId);
 
@@ -80,7 +80,7 @@ export async function handleSocialConnect({ socket, userId, chats, redisOps }) {
 
         const alreadyDelivered = await redisOps.isSetMember(
           deliveredKey,
-          String(msg.message_id)
+          String(msg.message_id),
         );
         if (alreadyDelivered) continue;
 
@@ -100,7 +100,7 @@ export async function handleSocialConnect({ socket, userId, chats, redisOps }) {
           toMarkDelivered.map((id) => ({ message_id: id })),
           userId,
           MESSAGE_STATUSES.DELIVERED,
-          context
+          context,
         );
       }
     }
@@ -122,7 +122,7 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
     const { id, chat_id, sender_id } = data;
     const context = authContext(socket);
     const tempMessageId = id;
-    const participantObj = { chatId: chat_id, redisOps, context };
+    const participantObj = { chatId: chat_id, redisOps, context, socket };
     const participants = await getParticipantsWithFallback(participantObj);
 
     if (!participants) return;
@@ -143,7 +143,7 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
     const sockets = await namespace.in(chat_id).fetchSockets();
     const onlineUserIds = sockets.map((s) => s.handshake.query.user_id);
     const deliveredUserIds = participants.filter(
-      (id) => id !== String(sender_id) && onlineUserIds.includes(id)
+      (id) => id !== String(sender_id) && onlineUserIds.includes(id),
     );
 
     for (const id of deliveredUserIds) {
@@ -167,7 +167,7 @@ export async function handleSendMessage({ socket, data, namespace, redisOps }) {
         const unreadCount = await incrementUnreadCount(
           participantId,
           chat_id,
-          redisOps
+          redisOps,
         );
 
         unreadCountsPayload.push({
@@ -236,7 +236,7 @@ export async function logAllRoomsAndUsers(namespace) {
   const rooms = namespace.adapter.rooms; // Map of roomName -> Set(socketIds)
   const sids = namespace.adapter.sids; // Map of socketId -> Set(roomNames)
 
-  for (const [roomName, _socketIds] of rooms) {
+  for (const roomName of rooms.keys()) {
     if (sids.has(roomName)) continue;
 
     const sockets = await namespace.in(roomName).fetchSockets();
@@ -246,7 +246,7 @@ export async function logAllRoomsAndUsers(namespace) {
     sockets.forEach((socket, index) => {
       const userId = socket.user?.id ?? "unknown";
       console.log(
-        `  #${index + 1} User ID: ${userId}, Socket ID: ${socket.id}`
+        `  #${index + 1} User ID: ${userId}, Socket ID: ${socket.id}`,
       );
     });
 
@@ -262,7 +262,7 @@ export async function handleMessageRead({ socket, data, namespace, redisOps }) {
     chat_id,
     user_id,
     messages.map((m) => m.message_id),
-    redisOps
+    redisOps,
   );
 
   namespace.to(chat_id).emit(EVENTS.CHAT_MESSAGE_STATUS_BATCH, {
