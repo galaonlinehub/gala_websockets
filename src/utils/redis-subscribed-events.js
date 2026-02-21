@@ -38,3 +38,24 @@ export const payments = (n, m) => {
     throw e;
   }
 };
+
+export const lessonReminder = (n, m) => {
+  try {
+    const { user_ids, message } = m;
+
+    if (!user_ids || !Array.isArray(user_ids) || !message) {
+      pinnoLogger.warn("Missing user_ids or message in Redis data:", m);
+      return;
+    }
+
+    user_ids.forEach((userId) => {
+      const roomName = `user:${userId}`;
+      n.to(roomName).emit(EVENTS.LESSON_REMINDER, message);
+    });
+
+    pinnoLogger.info(`Lesson reminder sent to ${user_ids.length} users`);
+  } catch (e) {
+    pinnoLogger.error("Error in lessonReminder event:", e);
+    throw e;
+  }
+};

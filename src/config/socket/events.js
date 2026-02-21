@@ -56,4 +56,5 @@ export const EVENTS = {
   FILE_UPLOAD_COMPLETE: "file_upload_complete",
 
   SOCIAL: "social",
+  LESSON_REMINDER: "lesson_reminder",
 };

@@ -4,7 +4,7 @@ import { logger } from "../utils/logger.js";
 import { setupPaymentNamespace } from "./payment/index.js";
 import { setupNotificationsNamespace } from "./notifications/index.js";
 import { config } from "../config/index.js";
-import { donationEvent, payments } from "../utils/redis-subscribed-events.js";
+import { donationEvent, payments, lessonReminder } from "../utils/redis-subscribed-events.js";
 
 export function setupNamespaces(io, redisClient, redisOps) {
   try {
@@ -23,7 +23,7 @@ export function setupNamespaces(io, redisClient, redisOps) {
     const registeredNamespaces = Array.from(io._nsps.keys());
     logger.info(`Registered namespaces: ${registeredNamespaces.join(", ")}`);
 
-    setupRedisSubscriptions(paymentNamespace);
+    setupRedisSubscriptions({ payment: paymentNamespace, notifications: notificationsNamespace });
 
     logger.info("All namespaces initialized successfully");
 
@@ -67,16 +67,18 @@ async function setupRedisSubscriptions(namespaces) {
         return;
       }
 
-      const paymentNamespace = namespaces;
+      const { payment: paymentNamespace, notifications: notificationsNamespace } = namespaces;
       const data = parsedMessage.data;
 
       if (parsedMessage.event === "payments.event") {
         payments(paymentNamespace, data);
       } else if (parsedMessage.event === "donations.event") {
         donationEvent(paymentNamespace, data);
+      } else if (parsedMessage.event === "lessonStartingSoon") {
+        lessonReminder(notificationsNamespace, data);
       }
     } catch (error) {
-      logger.error("Error processing payment message:", error);
+      logger.error("Error processing subscription message:", error);
     }
   });
 
